@@ -28,7 +28,10 @@ async function checkStatus() {
   });
 }
 
-setInterval(fetchSystemInfo, 1000 * 60);
+setInterval(() => {
+  fetchSystemInfo();
+  checkStatus();
+}, 1000 * 60);
 
 fetchSystemInfo();
 checkStatus();

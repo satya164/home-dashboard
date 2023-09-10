@@ -97,11 +97,13 @@ const api = async (pathname: string, res: http.ServerResponse) => {
       const status = await Promise.all(
         config.apps.map(async (app) => {
           try {
-            const status = await fetch(app.url.internal).then(
-              (res) => res.status
-            );
+            const status = await fetch(app.url.internal, {
+              method: app.request?.method ?? 'HEAD',
+            }).then((res) => res.status);
 
-            const online = (status >= 200 && status < 300) || status === 401;
+            const online = app.request?.status_codes
+              ? app.request.status_codes.includes(status)
+              : status >= 200 && status < 300;
 
             return {
               name: app.name,

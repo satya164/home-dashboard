@@ -61,7 +61,7 @@ main {
   max-width: 960px;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 960px) {
   main {
     height: 100%;
     align-items: center;

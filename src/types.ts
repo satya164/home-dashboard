@@ -6,6 +6,10 @@ export type Config = {
       internal: string;
       external: string;
     };
+    request?: {
+      method?: string;
+      status_codes?: number[];
+    }
   }>;
   dashdot: {
     url: string;
