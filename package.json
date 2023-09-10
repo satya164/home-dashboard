@@ -1,0 +1,20 @@
+{
+  "name": "dashboard",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --smol src/index.ts",
+    "start": "bun --smol dist/index",
+    "bundle": "bun build src/index.ts --compile --outfile dist/index"
+  },
+  "dependencies": {
+    "yaml": "^2.3.2"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "@types/ejs": "^3.1.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

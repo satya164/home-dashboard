@@ -1,0 +1,6 @@
+# modules are installed when building the image
+node_modules/
+
+# customizations
+config/
+public/icons/
