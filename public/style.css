@@ -57,11 +57,16 @@ body {
 
 main {
   display: flex;
-  align-items: center;
-  justify-content: center;
   margin: auto;
-  height: 100%;
   max-width: 960px;
+}
+
+@media (min-width: 480px) {
+  main {
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .content {
@@ -120,6 +125,10 @@ main {
 
 .app-status[data-status='offline'] {
   background-color: #da5956;
+}
+
+.app-status[data-status='unknown'] {
+  background-color: #f0c674;
 }
 
 .system-info {

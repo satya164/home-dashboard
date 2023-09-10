@@ -49,17 +49,24 @@ const api = async (pathname: string, res: http.ServerResponse) => {
       const widgets = ['cpu', 'ram', 'storage'];
       const [cpu, ram, storage] = await Promise.all(
         widgets.map(async (name) => {
-          return {
-            name,
-            data: await fetch(
-              new URL(`/load/${name}`, config.dashdot.url)
-            ).then((res) => res.json()),
-          };
+          try {
+            return {
+              name,
+              data: await fetch(
+                new URL(`/load/${name}`, config.dashdot.url)
+              ).then((res) => res.json()),
+            };
+          } catch (e) {
+            return {
+              name,
+              data: null,
+            };
+          }
         })
       );
 
       const system = {
-        cpu: cpu.data.reduce(
+        cpu: cpu.data?.reduce(
           (
             avg: number,
             { load }: { load: number },
@@ -70,11 +77,13 @@ const api = async (pathname: string, res: http.ServerResponse) => {
           },
           0
         ),
-        ram: (ram.data.load / info.ram.size) * 100,
-        storage: {
-          used: storage.data[0] / (1024 * 1024 * 1024),
-          total: info.storage[0].size / (1024 * 1024 * 1024),
-        },
+        ram: ram.data ? (ram.data.load / info.ram.size) * 100 : null,
+        storage: storage.data
+          ? {
+              used: storage.data[0] / (1024 * 1024 * 1024),
+              total: info.storage[0].size / (1024 * 1024 * 1024),
+            }
+          : null,
       };
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -87,14 +96,23 @@ const api = async (pathname: string, res: http.ServerResponse) => {
     case '/api/status': {
       const status = await Promise.all(
         config.apps.map(async (app) => {
-          const status = await fetch(app.url.internal).then(
-            (res) => res.status
-          );
+          try {
+            const status = await fetch(app.url.internal).then(
+              (res) => res.status
+            );
 
-          return {
-            name: app.name,
-            status,
-          };
+            const online = (status >= 200 && status < 300) || status === 401;
+
+            return {
+              name: app.name,
+              status: online ? 'online' : 'offline',
+            };
+          } catch (e) {
+            return {
+              name: app.name,
+              status: 'unknown',
+            };
+          }
         })
       );
 

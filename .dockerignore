@@ -1,6 +1,9 @@
 # modules are installed when building the image
 node_modules/
 
+# build artifacts
+dist/
+
 # customizations
 config/
 public/icons/
