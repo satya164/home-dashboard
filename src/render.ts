@@ -23,19 +23,21 @@ export function render({ apps, dashdot }: Config) {
             <section class="app-grid">
               ${apps.length === 0
                 ? '<p>No apps configured</p>'
-                : apps.map(
-                    (app) => html`
-                      <a
-                        href="${app.url}"
-                        title="${app.name}"
-                        target="_blank"
-                        class="app-tile"
-                      >
-                        <img class="app-icon" src="/icons/${app.icon}" />
-                        <span class="app-status"></span>
-                      </a>
-                    `
-                  ).join('')}
+                : apps
+                    .map(
+                      (app) => html`
+                        <a
+                          href="${app.url.external}"
+                          title="${app.name}"
+                          target="_blank"
+                          class="app-tile"
+                        >
+                          <img class="app-icon" src="/icons/${app.icon}" />
+                          <span class="app-status"></span>
+                        </a>
+                      `
+                    )
+                    .join('')}
             </section>
             ${dashdot.url
               ? html`

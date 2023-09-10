@@ -24,15 +24,19 @@ The app can be configured using a `config.yml` file in the `config` directory.
 # The list of apps to show on the dashboard
 apps:
   - name: HomeAssistant
-    url: https://assistant.mydomain.com
     icon: home-assistant.png
+    url:
+      internal: http://192.168.0.100:8123
+      external: https://assistant.mydomain.com
   - name: Jellyfin
-    url: https://jellyfin.mydomain.com
     icon: jellyfin.png
+    url:
+      internal: http://192.168.0.100:8096
+      external: https://jellyfin.mydomain.com
 
-# The URL of the dashdot server to fetch CPU, RAM, and disk usage
+# The internal URL of the dashdot server to fetch CPU, RAM, and disk usage
 dashdot:
-  url: https://dashdot.mydomain.com
+  url: http://192.168.0.100:3001
 ```
 
 Any icons placed in the `public/icons` directory will be available for use in the config.

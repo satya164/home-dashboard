@@ -86,9 +86,10 @@ const api = async (pathname: string, res: http.ServerResponse) => {
 
     case '/api/status': {
       const status = await Promise.all(
-        config.apps.map(async (app: any) => {
-          const url = new URL(app.url);
-          const status = await fetch(url).then((res) => res.status);
+        config.apps.map(async (app) => {
+          const status = await fetch(app.url.internal).then(
+            (res) => res.status
+          );
 
           return {
             name: app.name,
