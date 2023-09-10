@@ -1,34 +1,49 @@
+import fs from 'node:fs';
+import http from 'node:http';
 import { parse } from 'yaml';
-import { render } from './render';
+import { render } from './render.js';
 import type { Config } from './types';
 
-const assets = (path: string) => {
-  const file = Bun.file(`public/${path}`);
+const assets = async (filepath: string, res: http.ServerResponse) => {
+  const stat = await fs.promises.stat('public/' + filepath);
 
-  return new Response(file);
+  if (!stat.isFile()) {
+    res.writeHead(404);
+    res.end();
+    return;
+  }
+
+  const readStream = fs.createReadStream('public/' + filepath);
+
+  res.writeHead(200);
+  readStream.pipe(res);
 };
 
-const index = async () => {
-  const config = Bun.file('config/config.yml');
-  const yaml: Config = parse(await config.text());
+const index = async (res: http.ServerResponse) => {
+  const configContent = await fs.promises.readFile(
+    'config/config.yml',
+    'utf-8'
+  );
+  const config: Config = parse(configContent);
 
-  const html = render(yaml);
+  const html = render(config);
 
-  return new Response(html, {
-    headers: {
-      'Content-Type': 'text/html',
-    },
-  });
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+  res.write(html);
+  res.end();
 };
 
-const api = async (path: string) => {
-  const config = Bun.file('config/config.yml');
-  const yaml: Config = parse(await config.text());
+const api = async (pathname: string, res: http.ServerResponse) => {
+  const configContent = await fs.promises.readFile(
+    'config/config.yml',
+    'utf-8'
+  );
+  const config: Config = parse(configContent);
 
-  switch (path) {
+  switch (pathname) {
     case '/api/system-info': {
-      const info = await fetch(new URL(`/info`, yaml.dashdot.url)).then((res) =>
-        res.json()
+      const info = await fetch(new URL(`/info`, config.dashdot.url)).then(
+        (res) => res.json()
       );
 
       const widgets = ['cpu', 'ram', 'storage'];
@@ -36,9 +51,9 @@ const api = async (path: string) => {
         widgets.map(async (name) => {
           return {
             name,
-            data: await fetch(new URL(`/load/${name}`, yaml.dashdot.url)).then(
-              (res) => res.json()
-            ),
+            data: await fetch(
+              new URL(`/load/${name}`, config.dashdot.url)
+            ).then((res) => res.json()),
           };
         })
       );
@@ -62,16 +77,16 @@ const api = async (path: string) => {
         },
       };
 
-      return new Response(JSON.stringify(system), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(system));
+      res.end();
+
+      break;
     }
 
     case '/api/status': {
       const status = await Promise.all(
-        yaml.apps.map(async (app: any) => {
+        config.apps.map(async (app: any) => {
           const url = new URL(app.url);
           const status = await fetch(url).then((res) => res.status);
 
@@ -82,35 +97,42 @@ const api = async (path: string) => {
         })
       );
 
-      return new Response(JSON.stringify(status), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(status));
+      res.end();
+
+      break;
     }
 
     default:
-      return new Response(`404!`);
+      res.writeHead(404);
+      res.end();
   }
 };
 
-const server = Bun.serve({
-  port: 3096,
-  fetch(req) {
-    console.log('Request:', req.url);
+const host = '0.0.0.0';
+const port = 3096;
 
-    let path = new URL(req.url).pathname;
+const server = http.createServer((req, res) => {
+  console.log('Request:', req.url);
 
-    if (path === '/') {
-      return index();
-    }
+  if (req.url == null) {
+    res.writeHead(404);
+    res.end();
+    return;
+  }
 
-    if (path.startsWith('/api/')) {
-      return api(path);
-    }
+  if (req.url === '/') {
+    return index(res);
+  }
 
-    return assets(path);
-  },
+  if (req.url.startsWith('/api/')) {
+    return api(req.url, res);
+  }
+
+  return assets(req.url, res);
 });
 
-console.log(`Listening on http://${server.hostname}:${server.port}`);
+server.listen(port, host, () => {
+  console.log(`Server is running on http://${host}:${port}`);
+});

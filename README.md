@@ -7,13 +7,13 @@ A simple dashboard for homelab with [dashdot](https://getdashdot.com/) integrati
 To install dependencies:
 
 ```bash
-bun install
+npm install
 ```
 
 To run the app:
 
 ```bash
-bun start
+npm run dev
 ```
 
 ## Configuration

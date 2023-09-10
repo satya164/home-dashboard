@@ -3,18 +3,16 @@
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun --smol src/index.ts",
-    "start": "bun --smol dist/index",
-    "bundle": "bun build src/index.ts --compile --outfile dist/index"
+    "dev": "tsm src/index.ts",
+    "start": "node dist/src/index.js",
+    "build": "tsc"
   },
   "dependencies": {
     "yaml": "^2.3.2"
   },
   "devDependencies": {
-    "bun-types": "latest",
-    "@types/ejs": "^3.1.2"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
+    "@types/node": "^20.6.0",
+    "tsm": "^2.3.0",
+    "typescript": "^5.2.2"
   }
 }

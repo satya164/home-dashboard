@@ -170,9 +170,6 @@ dist
 .yarn/install-state.gz
 .pnp.\*
 
-# bun
-dist/
-
 # customizations
 
 config/
