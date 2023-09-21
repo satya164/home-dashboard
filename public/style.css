@@ -93,7 +93,7 @@ main {
   text-align: center;
   text-decoration: none;
   background-color: rgba(255, 255, 255, 0.05);
-  transition: background-color 0.15s ease-in-out;
+  transition: background-color 150ms ease-in-out;
 }
 
 .app-tile:hover {
@@ -107,7 +107,7 @@ main {
 .app-icon {
   width: 48px;
   transform: scale(1);
-  transition: transform 0.15s ease-in-out;
+  transition: transform 150ms ease-in-out;
 }
 
 .app-status {
@@ -139,6 +139,15 @@ main {
   gap: calc(var(--unit) * 2);
   font-size: 12px;
   font-weight: 400;
+  transition: opacity 150ms ease-in-out;
+}
+
+.system-info[data-visible='false'] {
+  opacity: 0;
+}
+
+.system-info[data-visible='true'] {
+  opacity: 1;
 }
 
 .system-info .label {

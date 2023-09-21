@@ -42,7 +42,7 @@ export function render({ apps, dashdot }: Config) {
             </section>
             ${dashdot.url
               ? html`
-                  <section class="system-info">
+                  <section id="system-info" data-visible="false" class="system-info">
                     <label>
                       <span class="label">CPU</span>
                       <span id="cpu">0%</span>

@@ -16,6 +16,8 @@ async function fetchSystemInfo() {
       2
     )} GB / ${system.storage.total.toFixed(2)} GB`;
   }
+
+  document.getElementById('system-info').dataset.visible = 'true';
 }
 
 async function checkStatus() {
