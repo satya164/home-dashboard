@@ -62,7 +62,7 @@ docker build --platform=linux/amd64 . -t satya164/dashboard
 To run the Docker image:
 
 ```bash
-docker run -p 3096:3096 -v /path/to/config:/app/config -v /path/to/icons:/app/public/icons -v /path/to/wallpapers:/app/public/wallpapers satya164/dashboard
+docker run -p 3096:3096 -v /path/to/config:/app/config -v /path/to/icons:/app/public/icons -v /path/to/wallpapers:/app/public/wallpapers ghcr.io/satya164/home-dashboard:main
 ```
 
 ## Deployment
@@ -76,7 +76,7 @@ name: dashboard
 services:
   dashboard:
     container_name: dashboard
-    image: satya164/dashboard:latest
+    image: ghcr.io/satya164/home-dashboard:main
     ports:
       - 3096:3096
     volumes:
