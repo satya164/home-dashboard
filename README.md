@@ -2,6 +2,10 @@
 
 A simple dashboard for homelab with [dashdot](https://getdashdot.com/) integration.
 
+![Demo](demo.png)
+
+Wallpaper by [Unsplash](https://unsplash.com/photos/black-mountain-under-clear-night-sky-zhUzdTgtRP8).
+
 ## Development
 
 Install dependencies:
