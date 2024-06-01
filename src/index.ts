@@ -5,15 +5,42 @@ import { render } from './render.js';
 import type { Config } from './types';
 
 const assets = async (filepath: string, res: http.ServerResponse) => {
+  const file = 'public/' + filepath;
+
   try {
-    await fs.promises.access('public/' + filepath, fs.constants.F_OK);
+    await fs.promises.access(file, fs.constants.F_OK);
   } catch (e) {
     res.writeHead(404);
     res.end();
     return;
   }
 
-  const readStream = fs.createReadStream('public/' + filepath);
+  const readStream = fs.createReadStream(file);
+
+  switch (file.split('.').pop()) {
+    case 'css':
+      res.setHeader('Content-Type', 'text/css');
+      break;
+    case 'js':
+      res.setHeader('Content-Type', 'text/javascript');
+      break;
+    case 'png':
+      res.setHeader('Content-Type', 'image/png');
+      break;
+    case 'jpg':
+      res.setHeader('Content-Type', 'image/jpg');
+      break;
+    case 'svg':
+      res.setHeader('Content-Type', 'image/svg+xml');
+      break;
+  }
+
+  if (file.endsWith('.jpg') || file.endsWith('.png') || file.endsWith('.svg')) {
+    res.setHeader(
+      'Cache-Control',
+      'public, max-age=120, stale-while-revalidate=300'
+    );
+  }
 
   res.writeHead(200);
   readStream.pipe(res);
@@ -39,6 +66,7 @@ const api = async (pathname: string, res: http.ServerResponse) => {
     'config/config.yml',
     'utf-8'
   );
+
   const config: Config = parse(configContent);
 
   switch (pathname) {
@@ -51,8 +79,8 @@ const api = async (pathname: string, res: http.ServerResponse) => {
         return;
       }
 
-      const info = await fetch(new URL(`/info`, dashdot.url)).then(
-        (res) => res.json()
+      const info = await fetch(new URL(`/info`, dashdot.url)).then((res) =>
+        res.json()
       );
 
       const widgets = ['cpu', 'ram', 'storage'];
@@ -61,9 +89,9 @@ const api = async (pathname: string, res: http.ServerResponse) => {
           try {
             return {
               name,
-              data: await fetch(
-                new URL(`/load/${name}`, dashdot.url)
-              ).then((res) => res.json()),
+              data: await fetch(new URL(`/load/${name}`, dashdot.url)).then(
+                (res) => res.json()
+              ),
             };
           } catch (e) {
             return {
