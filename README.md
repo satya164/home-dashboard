@@ -4,13 +4,15 @@ A simple dashboard for homelab with [dashdot](https://getdashdot.com/) integrati
 
 ## Development
 
-To install dependencies:
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-To run the app:
+Copy the sample config file from the [Configuration](#configuration) section to `config/config.yml`.
+
+Run the app:
 
 ```bash
 npm run dev
@@ -68,27 +70,9 @@ services:
     container_name: dashboard
     image: satya164/dashboard:latest
     ports:
-      - target: 3096
-        published: "3096"
-        protocol: tcp
-    cpu_shares: 10
-    restart: unless-stopped
+      - 3096:3096
     volumes:
-      - type: bind
-        source: /DATA/AppData/dashboard/config
-        target: /app/config
-      - type: bind
-        source: /DATA/AppData/dashboard/icons
-        target: /app/public/icons
-    network_mode: bridge
-    privileged: false
-x-casaos:
-  author: self
-  category: self
-  hostname: ""
-  index: /
-  port_map: "3096"
-  scheme: http
-  title:
-    custom: Dashboard
+      - /DATA/AppData/dashboard/config:/app/config
+      - /DATA/AppData/dashboard/icons:/app/public/icons
+    restart: unless-stopped
 ```
