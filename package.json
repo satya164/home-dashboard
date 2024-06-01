@@ -7,6 +7,7 @@
     "start": "node dist/src/index.js",
     "build": "tsc"
   },
+  "packageManager": "npm@10.8.1",
   "dependencies": {
     "yaml": "^2.3.2"
   },
