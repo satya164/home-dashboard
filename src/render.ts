@@ -2,7 +2,7 @@ import type { Config } from './types';
 
 const html = String.raw;
 
-export function render({ apps, dashdot }: Config) {
+export function render({ apps, dashdot, wallpaper }: Config) {
   return html`
     <!DOCTYPE html>
     <html lang="en">
@@ -18,7 +18,16 @@ export function render({ apps, dashdot }: Config) {
         />
         <link rel="stylesheet" href="style.css" />
       </head>
-      <body>
+      <body
+        ${wallpaper
+          ? `class="wallpaper" style="--wallpaper: url(${
+              'url' in wallpaper
+                ? wallpaper.url
+                : `/wallpapers/${wallpaper.file}`
+            })"`
+          : ''}
+        }
+      >
         <main>
           <div class="content">
             <section class="app-grid">
@@ -40,9 +49,13 @@ export function render({ apps, dashdot }: Config) {
                     )
                     .join('')}
             </section>
-            ${dashdot.url
+            ${dashdot?.url
               ? html`
-                  <section id="system-info" data-visible="false" class="system-info">
+                  <section
+                    id="system-info"
+                    data-visible="false"
+                    class="system-info"
+                  >
                     <label>
                       <span class="label">CPU</span>
                       <span id="cpu">0%</span>

@@ -9,9 +9,10 @@ export type Config = {
     request?: {
       method?: string;
       status_codes?: number[];
-    }
+    };
   }>;
-  dashdot: {
+  dashdot?: {
     url: string;
   };
+  wallpaper?: { url: string } | { file: string };
 };

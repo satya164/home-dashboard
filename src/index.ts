@@ -5,9 +5,9 @@ import { render } from './render.js';
 import type { Config } from './types';
 
 const assets = async (filepath: string, res: http.ServerResponse) => {
-  const stat = await fs.promises.stat('public/' + filepath);
-
-  if (!stat.isFile()) {
+  try {
+    await fs.promises.access('public/' + filepath, fs.constants.F_OK);
+  } catch (e) {
     res.writeHead(404);
     res.end();
     return;
@@ -24,6 +24,7 @@ const index = async (res: http.ServerResponse) => {
     'config/config.yml',
     'utf-8'
   );
+
   const config: Config = parse(configContent);
 
   const html = render(config);
@@ -42,7 +43,15 @@ const api = async (pathname: string, res: http.ServerResponse) => {
 
   switch (pathname) {
     case '/api/system-info': {
-      const info = await fetch(new URL(`/info`, config.dashdot.url)).then(
+      const dashdot = config.dashdot;
+
+      if (!dashdot?.url) {
+        res.writeHead(501);
+        res.end();
+        return;
+      }
+
+      const info = await fetch(new URL(`/info`, dashdot.url)).then(
         (res) => res.json()
       );
 
@@ -53,7 +62,7 @@ const api = async (pathname: string, res: http.ServerResponse) => {
             return {
               name,
               data: await fetch(
-                new URL(`/load/${name}`, config.dashdot.url)
+                new URL(`/load/${name}`, dashdot.url)
               ).then((res) => res.json()),
             };
           } catch (e) {

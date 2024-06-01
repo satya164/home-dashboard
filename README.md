@@ -24,6 +24,9 @@ The app can be configured using a `config.yml` file in the `config` directory.
 
 ```yaml
 # The list of apps to show on the dashboard
+# Icon files should be placed in the 'public/icons' directory
+# Internal URLs will be used to check if the app is running
+# External URLs will be used to open the app on click
 apps:
   - name: HomeAssistant
     icon: home-assistant.png
@@ -36,9 +39,14 @@ apps:
       internal: http://192.168.0.100:8096
       external: https://jellyfin.mydomain.com
 
-# The internal URL of the dashdot server to fetch CPU, RAM, and disk usage
+# Optional internal URL of the dashdot server to fetch CPU, RAM, and disk usage
 dashdot:
   url: http://192.168.0.100:3001
+
+# Optional wallpaper
+# Specify 'file: name-of-the-file.png' to use a local file under 'public/wallpapers'
+wallpaper:
+  url: https://images.unsplash.com/flagged/photo-1551301622-6fa51afe75a9
 ```
 
 Any icons placed in the `public/icons` directory will be available for use in the config.
@@ -54,7 +62,7 @@ docker build --platform=linux/amd64 . -t satya164/dashboard
 To run the Docker image:
 
 ```bash
-docker run -p 3096:3096 -v /path/to/config:/app/config -v /path/to/icons:/app/public/icons satya164/dashboard
+docker run -p 3096:3096 -v /path/to/config:/app/config -v /path/to/icons:/app/public/icons -v /path/to/wallpapers:/app/public/wallpapers satya164/dashboard
 ```
 
 ## Deployment
@@ -74,5 +82,6 @@ services:
     volumes:
       - /DATA/AppData/dashboard/config:/app/config
       - /DATA/AppData/dashboard/icons:/app/public/icons
+      - /DATA/AppData/dashboard/wallpapers:/app/public/wallpapers
     restart: unless-stopped
 ```

@@ -55,6 +55,12 @@ body {
   color: #fff;
 }
 
+body.wallpaper {
+  background-size: cover;
+  background-position: center;
+  background-image: var(--wallpaper, 'none');
+}
+
 main {
   display: flex;
   margin: auto;
@@ -102,6 +108,16 @@ main {
 
 .app-tile:hover .app-icon {
   transform: scale(1.1);
+}
+
+.wallpaper .app-tile {
+  background-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(33px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.wallpaper .app-tile:hover {
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 .app-icon {
