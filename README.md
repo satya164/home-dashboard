@@ -42,11 +42,11 @@ The configuration file supports the following options:
   - `request`: The request options to check the app status (optional)
     - `method`: The HTTP method to use (default: `HEAD`)
     - `status_codes`: The list of status codes to check (default: `[200]`)
-  - `dashdot`: Configuration for the dashdot (optional)
-    - `url`: The internal URL of the dashdot server
-  - `wallpaper`: Configuration for the wallpaper (optional)
-    - `url`: The wallpaper URL to use
-    - `file`: The wallpaper file in the `public/wallpapers` directory
+- `dashdot`: Configuration for dashdot (optional)
+  - `url`: The internal URL of the dashdot server
+- `wallpaper`: Configuration for the wallpaper (optional)
+  - `url`: The wallpaper URL to use
+  - `file`: The wallpaper file in the `public/wallpapers` directory
 
 Internal URLs refer to the local network URLs, or any URL that can be accessed by the server.
 
