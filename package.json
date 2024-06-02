@@ -3,7 +3,7 @@
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "tsm src/index.ts",
+    "dev": "tsx --watch src/index.ts",
     "start": "node dist/src/index.js",
     "build": "tsc"
   },
@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.6.0",
-    "tsm": "^2.3.0",
+    "tsx": "^4.11.0",
     "typescript": "^5.2.2"
   }
 }
