@@ -4,7 +4,11 @@ import { parse } from 'yaml';
 import { render } from './render.js';
 import type { Config } from './types';
 
-const assets = async (filepath: string, res: http.ServerResponse) => {
+const assets = async (
+  filepath: string,
+  req: http.IncomingMessage,
+  res: http.ServerResponse
+) => {
   const file = 'public/' + filepath;
 
   try {
@@ -36,10 +40,18 @@ const assets = async (filepath: string, res: http.ServerResponse) => {
   }
 
   if (file.endsWith('.jpg') || file.endsWith('.png') || file.endsWith('.svg')) {
-    res.setHeader(
-      'Cache-Control',
-      'public, max-age=120, stale-while-revalidate=300'
-    );
+    const stat = await fs.promises.stat(file);
+
+    res.setHeader('Last-Modified', stat.mtime.toUTCString());
+    res.setHeader('Expires', new Date(Date.now() + 60 * 1000).toUTCString());
+
+    if (req.headers['if-modified-since']) {
+      if (req.headers['if-modified-since'] === stat.mtime.toUTCString()) {
+        res.writeHead(304);
+        res.end();
+        return;
+      }
+    }
   }
 
   res.writeHead(200);
@@ -171,8 +183,8 @@ const api = async (pathname: string, res: http.ServerResponse) => {
 const host = '0.0.0.0';
 const port = 3096;
 
-const server = http.createServer((req, res) => {
-  console.log('Request:', req.url);
+const server = http.createServer(async (req, res) => {
+  console.log('-->', req.method, req.url);
 
   if (req.url == null) {
     res.writeHead(404);
@@ -181,16 +193,16 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.url === '/') {
-    return index(res);
+    await index(res);
+  } else if (req.url.startsWith('/api/')) {
+    await api(req.url, res);
+  } else {
+    await assets(req.url, req, res);
   }
 
-  if (req.url.startsWith('/api/')) {
-    return api(req.url, res);
-  }
-
-  return assets(req.url, res);
+  console.log('<--', req.method, req.url, res.statusCode);
 });
 
 server.listen(port, host, () => {
-  console.log(`Server is running on http://${host}:${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
