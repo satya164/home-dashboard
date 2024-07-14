@@ -171,3 +171,11 @@ main {
   opacity: 0.3;
   margin-right: var(--unit);
 }
+
+.system-info .warning {
+  color: #f0c674;
+}
+
+.system-info .danger {
+  color: #da5956;
+}
