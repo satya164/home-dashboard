@@ -40,6 +40,7 @@ export function render({ apps, dashdot, wallpaper }: Config) {
                           href="${app.url.external}"
                           title="${app.name}"
                           target="_blank"
+                          rel="noopener noreferrer"
                           class="app-tile"
                         >
                           <img class="app-icon" src="/icons/${app.icon}" />
