@@ -56,20 +56,7 @@ export function render({ apps, dashdot, wallpaper }: Config) {
                     id="system-info"
                     data-visible="false"
                     class="system-info"
-                  >
-                    <label>
-                      <span class="label">CPU</span>
-                      <span id="cpu">0%</span>
-                    </label>
-                    <label>
-                      <span class="label">RAM</span>
-                      <span id="ram">0%</span>
-                    </label>
-                    <label>
-                      <span class="label">Disk</span>
-                      <span id="storage">0 / 0</span>
-                    </label>
-                  </section>
+                  >&nbsp;</section>
                 `
               : ''}
           </div>

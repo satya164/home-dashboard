@@ -1,49 +1,72 @@
 async function fetchSystemInfo() {
   const system = await fetch('/api/system-info').then((res) => res.json());
 
-  const cpu = document.getElementById('cpu');
-  const ram = document.getElementById('ram');
-  const storage = document.getElementById('storage');
+  const section = document.getElementById('system-info');
+
+  section.innerHTML = '&nbsp;';
+
+  const info = [];
 
   if (system.cpu) {
-    cpu.textContent = `${system.cpu.toFixed(2)}%`;
-  }
+    const label = 'CPU';
+    const value = `${system.cpu.toFixed(2)}%`;
+    const status =
+      system.cpu >= 70 ? 'warning' : system.cpu >= 90 ? 'danger' : null;
 
-  if (system.cpu >= 70) {
-    cpu.classList.add('warning');
-  } else if (system.cpu >= 90) {
-    cpu.classList.add('danger');
-  } else {
-    cpu.classList.remove('warning', 'danger');
+    info.push({ label, value, status });
   }
 
   if (system.ram) {
-    ram.textContent = `${system.ram.toFixed(2)}%`;
-  }
+    const label = 'RAM';
+    const value = `${system.ram.used.toFixed(
+      2
+    )} GB / ${system.ram.total.toFixed(2)} GB`;
+    const status =
+      system.ram.used >= system.ram.total * 0.7
+        ? 'warning'
+        : system.ram.used >= system.ram.total * 0.9
+        ? 'danger'
+        : null;
 
-  if (system.ram >= 70) {
-    ram.classList.add('warning');
-  } else if (system.ram >= 90) {
-    ram.classList.add('danger');
-  } else {
-    ram.classList.remove('warning', 'danger');
+    info.push({ label, value, status });
   }
 
   if (system.storage) {
-    storage.textContent = `${system.storage.used.toFixed(
-      2
-    )} GB / ${system.storage.total.toFixed(2)} GB`;
+    system.storage.forEach((it, index, self) => {
+      const label = self.length > 1 ? `Disk ${index + 1}` : 'Disk';
+      const value = `${it.used.toFixed(2)} GB / ${it.total.toFixed(2)} GB`;
+      const status =
+        it.used >= it.total * 0.7
+          ? 'warning'
+          : it.used >= it.total * 0.9
+          ? 'danger'
+          : null;
+
+      info.push({ label, value, status });
+    });
   }
 
-  if (system.storage.used >= system.storage.total * 0.7) {
-    storage.classList.add('warning');
-  } else if (system.storage.used >= system.storage.total * 0.9) {
-    storage.classList.add('danger');
-  } else {
-    storage.classList.remove('warning', 'danger');
-  }
+  info.forEach((it) => {
+    const element = document.createElement('label');
+    const label = document.createElement('span');
+    const value = document.createElement('span');
 
-  document.getElementById('system-info').dataset.visible = 'true';
+    label.classList.add('label');
+
+    label.textContent = it.label;
+    value.textContent = it.value;
+
+    if (it.status) {
+      value.classList.add(it.status);
+    }
+
+    element.appendChild(label);
+    element.appendChild(value);
+
+    section.appendChild(element);
+  });
+
+  section.dataset.visible = 'true';
 }
 
 async function checkStatus() {

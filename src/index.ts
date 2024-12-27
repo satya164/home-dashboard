@@ -126,12 +126,23 @@ const api = async (pathname: string, res: http.ServerResponse) => {
           },
           0
         ),
-        ram: ram.data ? (ram.data.load / info.ram.size) * 100 : null,
-        storage: storage.data
+        ram: ram.data
           ? {
-              used: storage.data[0] / (1024 * 1024 * 1024),
-              total: info.storage[0].size / (1024 * 1024 * 1024),
+              used: ram.data.load / (1024 * 1024 * 1024),
+              total: info.ram.size / (1024 * 1024 * 1024),
             }
+          : null,
+        storage: storage.data
+          ? storage.data
+              .map((it: number, i: number) =>
+                it >= 0
+                  ? {
+                      used: it / (1024 * 1024 * 1024),
+                      total: info.storage[i].size / (1024 * 1024 * 1024),
+                    }
+                  : null
+              )
+              .filter(Boolean)
           : null,
       };
 
