@@ -66,11 +66,12 @@ async function fetchSystemInfo() {
 
       section.appendChild(element);
     });
+
+    section.dataset.visible = 'true';
   } else {
     section.innerHTML = '&nbsp;';
+    section.dataset.visible = 'false';
   }
-
-  section.dataset.visible = 'true';
 }
 
 async function checkStatus() {
