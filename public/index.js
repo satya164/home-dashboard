@@ -1,10 +1,6 @@
 async function fetchSystemInfo() {
   const system = await fetch('/api/system-info').then((res) => res.json());
 
-  const section = document.getElementById('system-info');
-
-  section.innerHTML = '&nbsp;';
-
   const info = [];
 
   if (system.cpu) {
@@ -46,25 +42,33 @@ async function fetchSystemInfo() {
     });
   }
 
-  info.forEach((it) => {
-    const element = document.createElement('label');
-    const label = document.createElement('span');
-    const value = document.createElement('span');
+  const section = document.getElementById('system-info');
 
-    label.classList.add('label');
+  if (info.length) {
+    section.innerHTML = '';
 
-    label.textContent = it.label;
-    value.textContent = it.value;
+    info.forEach((it) => {
+      const element = document.createElement('label');
+      const label = document.createElement('span');
+      const value = document.createElement('span');
 
-    if (it.status) {
-      value.classList.add(it.status);
-    }
+      label.classList.add('label');
 
-    element.appendChild(label);
-    element.appendChild(value);
+      label.textContent = it.label;
+      value.textContent = it.value;
 
-    section.appendChild(element);
-  });
+      if (it.status) {
+        value.classList.add(it.status);
+      }
+
+      element.appendChild(label);
+      element.appendChild(value);
+
+      section.appendChild(element);
+    });
+  } else {
+    section.innerHTML = '&nbsp;';
+  }
 
   section.dataset.visible = 'true';
 }
