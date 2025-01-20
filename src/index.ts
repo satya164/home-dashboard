@@ -157,7 +157,7 @@ const api = async (pathname: string, res: http.ServerResponse) => {
       const status = await Promise.all(
         config.apps.map(async (app) => {
           try {
-            const status = await fetch(app.url.internal, {
+            const status = await fetch(`${app.url.internal}${app.request?.path ? `/${app.request.path}` : ''}`, {
               method: app.request?.method ?? 'HEAD',
             }).then((res) => res.status);
 

@@ -7,6 +7,7 @@ export type Config = {
       external: string;
     };
     request?: {
+      path?: string;
       method?: string;
       status_codes?: number[];
     };
