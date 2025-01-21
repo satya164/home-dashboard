@@ -1,19 +1,83 @@
 import fs from 'node:fs';
+import { mkdir } from 'node:fs/promises';
 import http from 'node:http';
+import { dirname, join } from 'node:path';
+import { Readable } from 'node:stream';
+import { finished } from 'node:stream/promises';
 import { parse } from 'yaml';
+import { z } from 'zod';
 import { render } from './render.js';
 import type { Config } from './types';
+
+const schemas = {
+  info: z.object({
+    cpu: z.object({
+      cores: z.number(),
+    }),
+    ram: z.object({
+      size: z.number(),
+    }),
+    storage: z.array(z.object({ size: z.number() })),
+  }),
+  widgets: z.tuple([
+    z.object({
+      name: z.literal('cpu'),
+      data: z.array(z.object({ load: z.number() })).nullable(),
+    }),
+    z.object({
+      name: z.literal('ram'),
+      data: z.object({ load: z.number() }).nullable(),
+    }),
+    z.object({
+      name: z.literal('storage'),
+      data: z.array(z.number()).nullable(),
+    }),
+  ]),
+};
 
 const assets = async (
   filepath: string,
   req: http.IncomingMessage,
   res: http.ServerResponse
 ) => {
-  const file = 'public/' + filepath;
+  const file = join('public', filepath);
+
+  let found = false;
 
   try {
     await fs.promises.access(file, fs.constants.F_OK);
+
+    found = true;
   } catch (e) {
+    if (
+      e &&
+      typeof e === 'object' &&
+      'code' in e &&
+      e.code === 'ENOENT' &&
+      filepath.startsWith('/icons/')
+    ) {
+      const name = filepath.split('/').pop();
+      const type = name?.split('.').pop();
+
+      if (name && type) {
+        const res = await fetch(
+          `https://raw.githubusercontent.com/homarr-labs/dashboard-icons/refs/heads/main/${type}/${name}`
+        );
+
+        if (res.ok && res.body) {
+          await mkdir(dirname(file), { recursive: true });
+
+          const fileStream = fs.createWriteStream(file, { flags: 'wx' });
+
+          await finished(Readable.fromWeb(res.body).pipe(fileStream));
+
+          found = true;
+        }
+      }
+    }
+  }
+
+  if (!found) {
     res.writeHead(404);
     res.end();
     return;
@@ -91,41 +155,35 @@ const api = async (pathname: string, res: http.ServerResponse) => {
         return;
       }
 
-      const info = await fetch(new URL(`/info`, dashdot.url)).then((res) =>
-        res.json()
+      const info = schemas.info.parse(
+        await fetch(new URL(`/info`, dashdot.url)).then((res) => res.json())
       );
 
       const widgets = ['cpu', 'ram', 'storage'];
-      const [cpu, ram, storage] = await Promise.all(
-        widgets.map(async (name) => {
-          try {
-            return {
-              name,
-              data: await fetch(new URL(`/load/${name}`, dashdot.url)).then(
-                (res) => res.json()
-              ),
-            };
-          } catch (e) {
-            return {
-              name,
-              data: null,
-            };
-          }
-        })
+      const [cpu, ram, storage] = schemas.widgets.parse(
+        await Promise.all(
+          widgets.map(async (name) => {
+            try {
+              return {
+                name,
+                data: await fetch(new URL(`/load/${name}`, dashdot.url)).then(
+                  (res) => res.json()
+                ),
+              };
+            } catch (e) {
+              return {
+                name,
+                data: null,
+              };
+            }
+          })
+        )
       );
 
       const system = {
-        cpu: cpu.data?.reduce(
-          (
-            avg: number,
-            { load }: { load: number },
-            _: number,
-            self: Array<{ load: number }>
-          ) => {
-            return avg + load / self.length;
-          },
-          0
-        ),
+        cpu: cpu.data?.reduce((avg, { load }, _, self) => {
+          return avg + load / self.length;
+        }, 0),
         ram: ram.data
           ? {
               used: ram.data.load / (1024 * 1024 * 1024),
@@ -134,7 +192,7 @@ const api = async (pathname: string, res: http.ServerResponse) => {
           : null,
         storage: storage.data
           ? storage.data
-              .map((it: number, i: number) =>
+              .map((it, i) =>
                 it >= 0
                   ? {
                       used: it / (1024 * 1024 * 1024),
@@ -157,9 +215,14 @@ const api = async (pathname: string, res: http.ServerResponse) => {
       const status = await Promise.all(
         config.apps.map(async (app) => {
           try {
-            const status = await fetch(`${app.url.internal}${app.request?.path ? `/${app.request.path}` : ''}`, {
-              method: app.request?.method ?? 'HEAD',
-            }).then((res) => res.status);
+            const status = await fetch(
+              `${app.url.internal}${
+                app.request?.path ? `/${app.request.path}` : ''
+              }`,
+              {
+                method: app.request?.method ?? 'HEAD',
+              }
+            ).then((res) => res.status);
 
             const online = app.request?.status_codes
               ? app.request.status_codes.includes(status)

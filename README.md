@@ -42,6 +42,7 @@ The configuration file supports the following options:
   - `request`: The request options to check the app status (optional)
     - `method`: The HTTP method to use (default: `HEAD`)
     - `status_codes`: The list of status codes to check (default: `[200]`)
+    - `path`: The path to check (default: `/`)
 - `dashdot`: Configuration for dashdot (optional)
   - `url`: The internal URL of the dashdot server
 - `wallpaper`: Configuration for the wallpaper (optional)
@@ -55,6 +56,8 @@ The assets can be placed in the `public` directory:
 - `public/icons`: Icons for the apps
 - `public/wallpapers`: Wallpapers for the dashboard
 
+If an icon is specified, but not found in the `public/icons` directory, it'll be downloaded from [homarr-labs/dashboard-icons](https://github.com/homarr-labs/dashboard-icons) and saved in the `public/icons` directory.
+
 The app uses [dashdot](https://getdashdot.com/) to show the CPU, RAM, and disk usage of the server. The `dashdot` configuration is optional.
 
 Sample `config.yml`:
@@ -62,24 +65,24 @@ Sample `config.yml`:
 ```yaml
 apps:
   - name: HomeAssistant
-    icon: home-assistant.png
+    icon: home-assistant.svg
     url:
       internal: http://192.168.0.100:8123
       external: https://assistant.mydomain.com
   - name: Jellyfin
-    icon: jellyfin.png
+    icon: jellyfin.svg
     url:
       internal: http://192.168.0.100:8096
       external: https://jellyfin.mydomain.com
   - name: File Browser
-    icon: filebrowser.png
+    icon: filebrowser.svg
     url:
       internal: http://192.168.0.100:6080
       external: https://files.mydomain.com
     request:
       method: GET
   - name: Syncthing
-    icon: syncthing.png
+    icon: syncthing.svg
     url:
       internal: http://192.168.0.100:8384
       external: https://syncthing.mydomain.com
