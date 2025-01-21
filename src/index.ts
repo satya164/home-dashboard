@@ -42,42 +42,9 @@ const assets = async (
 ) => {
   const file = join('public', filepath);
 
-  let found = false;
-
   try {
     await fs.promises.access(file, fs.constants.F_OK);
-
-    found = true;
   } catch (e) {
-    if (
-      e &&
-      typeof e === 'object' &&
-      'code' in e &&
-      e.code === 'ENOENT' &&
-      filepath.startsWith('/icons/')
-    ) {
-      const name = filepath.split('/').pop();
-      const type = name?.split('.').pop();
-
-      if (name && type) {
-        const res = await fetch(
-          `https://raw.githubusercontent.com/homarr-labs/dashboard-icons/refs/heads/main/${type}/${name}`
-        );
-
-        if (res.ok && res.body) {
-          await mkdir(dirname(file), { recursive: true });
-
-          const fileStream = fs.createWriteStream(file, { flags: 'wx' });
-
-          await finished(Readable.fromWeb(res.body).pipe(fileStream));
-
-          found = true;
-        }
-      }
-    }
-  }
-
-  if (!found) {
     res.writeHead(404);
     res.end();
     return;
@@ -129,6 +96,34 @@ const index = async (res: http.ServerResponse) => {
   );
 
   const config: Config = parse(configContent);
+
+  await Promise.all(
+    config.apps.map(async (app) => {
+      const file = join('public', 'icons', app.icon);
+
+      try {
+        await fs.promises.access(file, fs.constants.F_OK);
+      } catch (e) {
+        if (e && typeof e === 'object' && 'code' in e && e.code === 'ENOENT') {
+          const type = app.icon.split('.').pop();
+
+          if (type) {
+            const res = await fetch(
+              `https://raw.githubusercontent.com/homarr-labs/dashboard-icons/refs/heads/main/${type}/${app.icon}`
+            );
+
+            if (res.ok && res.body) {
+              await mkdir(dirname(file), { recursive: true });
+
+              const fileStream = fs.createWriteStream(file, { flags: 'wx' });
+
+              await finished(Readable.fromWeb(res.body).pipe(fileStream));
+            }
+          }
+        }
+      }
+    })
+  );
 
   const html = render(config);
 
