@@ -117,11 +117,23 @@ npm run dev
 To build the Docker image:
 
 ```bash
-docker build --platform=linux/amd64 . -t ghcr.io/satya164/home-dashboard
+docker build . -t ghcr.io/satya164/home-dashboard:main
+```
+
+Or with Podman:
+
+```bash
+podman build . -t ghcr.io/satya164/home-dashboard:main
 ```
 
 To run the Docker image:
 
 ```bash
-docker run -p 3096:3096 -v /path/to/config:/app/config -v /path/to/icons:/app/public/icons -v /path/to/wallpapers:/app/public/wallpapers ghcr.io/satya164/home-dashboard:main
+docker run -p 3096:3096 -v ./config:/app/config -v ./public/icons:/app/public/icons -v ./public/wallpapers:/app/public/wallpapers ghcr.io/satya164/home-dashboard:main
+```
+
+Or with Podman:
+
+```bash
+podman run -p 3096:3096 -v ./config:/app/config -v ./public/icons:/app/public/icons -v ./public/wallpapers:/app/public/wallpapers ghcr.io/satya164/home-dashboard:main
 ```

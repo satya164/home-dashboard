@@ -90,10 +90,14 @@ const assets = async (
 };
 
 const index = async (res: http.ServerResponse) => {
+  console.log('Rendering index.html');
+
   const configContent = await fs.promises.readFile(
     'config/config.yml',
     'utf-8'
   );
+
+  console.log('Fetching icons');
 
   const config: Config = parse(configContent);
 
