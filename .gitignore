@@ -172,6 +172,6 @@ dist
 
 # customizations
 
-config/
-public/icons
-public/wallpapers
+config/config.yml
+public/icons/*
+public/wallpapers/*

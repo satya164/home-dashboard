@@ -32,7 +32,7 @@ export function render({ apps, dashdot, wallpaper }: Config) {
           <div class="content">
             <section class="app-grid">
               ${apps.length === 0
-                ? '<p>No apps configured</p>'
+                ? '<p>No apps configured. Edit <code>config/config.yml</code> to add the list of apps to display.</p>'
                 : apps
                     .map(
                       (app) => html`

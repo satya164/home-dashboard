@@ -90,7 +90,14 @@ const assets = async (
 };
 
 const index = async (res: http.ServerResponse) => {
-  console.log('Rendering index.html');
+  try {
+    await fs.promises.access('config/config.yml', fs.constants.F_OK);
+  } catch (e) {
+    if (e && typeof e === 'object' && 'code' in e && e.code === 'ENOENT') {
+      await mkdir('config', { recursive: true });
+      await fs.promises.writeFile('config/config.yml', `apps: []\n`);
+    }
+  }
 
   const configContent = await fs.promises.readFile(
     'config/config.yml',
