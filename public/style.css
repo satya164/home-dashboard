@@ -2,6 +2,7 @@
 html {
   box-sizing: border-box;
   font-family: 'Roboto Slab', serif;
+  font-size: 14px;
 }
 
 *,
@@ -69,7 +70,7 @@ main {
 
 @media (min-width: 960px) {
   main {
-    height: 100%;
+    min-height: 100%;
     align-items: center;
     justify-content: center;
   }
@@ -78,6 +79,40 @@ main {
 .content {
   width: 100%;
   padding: calc(var(--unit) * 2);
+}
+
+.search {
+  appearance: none;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: none;
+  outline: none;
+  color: inherit;
+  font: inherit;
+  width: 300px;
+  max-width: 100%;
+  border-radius: var(--roundness);
+  padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2);
+  margin-bottom: calc(var(--unit) * 2);
+  transition: background-color 150ms ease-in-out;
+}
+
+.search:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.search::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.wallpaper .search {
+  background-color: rgba(255, 255, 255, 0.15);
+  -webkit-backdrop-filter: blur(33px); /* Safari */
+  backdrop-filter: blur(33px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.wallpaper .search:focus {
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 .app-grid {
@@ -110,6 +145,11 @@ main {
   transform: scale(1.1);
 }
 
+.app-tile:focus-visible, .app-tile[data-focus='true'] {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 0;
+}
+
 .wallpaper .app-tile {
   background-color: rgba(255, 255, 255, 0.15);
   -webkit-backdrop-filter: blur(33px); /* Safari */
@@ -121,10 +161,49 @@ main {
   background-color: rgba(255, 255, 255, 0.25);
 }
 
+.app-tile[data-match='exact'] {
+  order: 0;
+}
+
+.app-tile[data-match='start'] {
+  order: 1;
+}
+
+.app-tile[data-match='partial'] {
+  order: 2;
+}
+
+.app-tile[data-match='unknown'] {
+  order: 3;
+}
+
+.app-tile[data-match='none'] {
+  order: 4;
+  visibility: hidden;
+}
+
 .app-icon {
   width: 48px;
   transform: scale(1);
   transition: transform 150ms ease-in-out;
+}
+
+.app-name {
+  position: absolute;
+  bottom: calc(var(--unit) * 2);
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+  text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-name mark {
+  color: rgba(255, 255, 255, 1);
+  background-color: transparent;
 }
 
 .app-status {

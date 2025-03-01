@@ -30,6 +30,12 @@ export function render({ apps, dashdot, wallpaper }: Config) {
       >
         <main>
           <div class="content">
+            <input
+              type="text"
+              id="search"
+              class="search"
+              placeholder="Search for apps…"
+            />
             <section class="app-grid">
               ${apps.length === 0
                 ? '<p>No apps configured. Edit <code>config/config.yml</code> to add the list of apps to display.</p>'
@@ -37,13 +43,14 @@ export function render({ apps, dashdot, wallpaper }: Config) {
                     .map(
                       (app) => html`
                         <a
+                          data-name="${app.name}"
                           href="${app.url.external}"
-                          title="${app.name}"
                           target="_blank"
                           rel="noopener noreferrer"
                           class="app-tile"
                         >
                           <img class="app-icon" src="/icons/${app.icon}" />
+                          <div class="app-name">${app.name}</div>
                           <span class="app-status"></span>
                         </a>
                       `
@@ -53,10 +60,12 @@ export function render({ apps, dashdot, wallpaper }: Config) {
             ${dashdot?.url
               ? html`
                   <section
-                    id="system-info"
                     data-visible="false"
+                    id="system-info"
                     class="system-info"
-                  >&nbsp;</section>
+                  >
+                    &nbsp;
+                  </section>
                 `
               : ''}
           </div>

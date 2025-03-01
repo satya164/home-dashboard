@@ -21,8 +21,8 @@ async function fetchSystemInfo() {
       system.ram.used >= system.ram.total * 0.7
         ? 'warning'
         : system.ram.used >= system.ram.total * 0.9
-        ? 'danger'
-        : null;
+          ? 'danger'
+          : null;
 
     info.push({ label, value, status });
   }
@@ -35,8 +35,8 @@ async function fetchSystemInfo() {
         it.used >= it.total * 0.7
           ? 'warning'
           : it.used >= it.total * 0.9
-          ? 'danger'
-          : null;
+            ? 'danger'
+            : null;
 
       info.push({ label, value, status });
     });
@@ -78,9 +78,217 @@ async function checkStatus() {
   const status = await fetch('/api/status').then((res) => res.json());
 
   status.forEach((item) => {
-    const el = document.querySelector(`[title="${item.name}"] .app-status`);
+    const el = document.querySelector(`[data-name="${item.name}"] .app-status`);
 
     el.dataset.status = item.status;
+  });
+}
+
+function addSearch() {
+  const search = document.getElementById('search');
+  const apps = document.querySelectorAll('.app-tile');
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key.length === 1) {
+      search.focus();
+    } else {
+      switch (event.key) {
+        case 'Escape':
+          {
+            search.blur();
+            search.value = '';
+            search.dispatchEvent(new Event('input'), { bubbles: true });
+          }
+          break;
+        case 'ArrowLeft':
+        case 'ArrowRight':
+        case 'ArrowUp':
+        case 'ArrowDown':
+          {
+            // Prevent the default behavior of moving the cursor
+            event.preventDefault();
+
+            const results = Array.from(apps).filter(
+              (app) => app.dataset.match !== 'none'
+            );
+
+            if (results.length) {
+              const focused = results.find(
+                (app) =>
+                  app.dataset.focus === 'true' || app === document.activeElement
+              );
+
+              const index = results.indexOf(focused);
+
+              if (index === -1) {
+                results[0].dataset.focus = 'true';
+              } else {
+                // Count the number of tiles in the first row
+                let numtiles = 0;
+
+                for (let i = 0; i < results.length; i++) {
+                  if (
+                    results[i].getBoundingClientRect().top !==
+                    results[0].getBoundingClientRect().top
+                  ) {
+                    break;
+                  }
+
+                  numtiles++;
+                }
+
+                const numrows = Math.ceil(results.length / numtiles);
+                const currentrow = Math.floor(index / numtiles);
+
+                let next = index;
+
+                switch (event.key) {
+                  case 'ArrowLeft':
+                    if (index > 0) {
+                      next = index - 1;
+                    } else {
+                      next = results.length - 1;
+                    }
+
+                    break;
+                  case 'ArrowRight':
+                    if (index < results.length - 1) {
+                      next = index + 1;
+                    } else {
+                      next = 0;
+                    }
+
+                    break;
+                  case 'ArrowUp':
+                    if (numrows !== 1) {
+                      // The last row may not be full
+                      // So we need to adjust if we're on the first row,
+                      // and cycling to the last row
+                      const delta = results.length % numtiles;
+                      const position = index % numtiles;
+
+                      if (currentrow === 0) {
+                        // If delta is within the current row, move to the last row
+                        if (delta <= position) {
+                          next = results.length - 1;
+                        } else {
+                          next = results.length - delta + position;
+                        }
+                      } else {
+                        next = index - numtiles;
+                      }
+                    }
+
+                    break;
+                  case 'ArrowDown':
+                    if (numrows !== 1) {
+                      // If we're on the last row, it may not be full
+                      // So we need to adjust the number of tiles when cycling to the top row
+                      if (currentrow === numrows - 1) {
+                        next = index % numtiles;
+                      } else {
+                        next = index + numtiles;
+
+                        if (next >= results.length) {
+                          next = results.length - 1;
+                        }
+                      }
+                    }
+
+                    break;
+                }
+
+                const item = results[next];
+
+                if (item) {
+                  focused.dataset.focus = 'false';
+                  item.dataset.focus = 'true';
+
+                  // If the previous item was focused, then move the focus to the next item
+                  // Also add the focus if no element (such as search input) is focused
+                  if (
+                    !document.activeElement ||
+                    focused === document.activeElement
+                  ) {
+                    next.focus();
+                  }
+                }
+              }
+            }
+          }
+          break;
+        case 'Enter':
+          {
+            const focused = Array.from(apps).find(
+              (app) =>
+                app.dataset.focus === 'true' || app === document.activeElement
+            );
+
+            if (focused) {
+              // Prevent the default behavior to avoid double-clicking
+              event.preventDefault();
+              focused.click();
+            }
+          }
+          break;
+      }
+    }
+  });
+
+  search.addEventListener('input', (event) => {
+    const query = event.target.value.toLowerCase();
+
+    apps.forEach((app) => {
+      const name = app.querySelector('.app-name');
+
+      if (query) {
+        const title = name.textContent.toLowerCase();
+
+        if (title === query) {
+          app.dataset.match = 'exact';
+        } else if (title.startsWith(query)) {
+          app.dataset.match = 'start';
+        } else if (title.includes(query)) {
+          app.dataset.match = 'partial';
+        } else {
+          app.dataset.match = 'none';
+          app.dataset.focus = 'false';
+        }
+
+        // Highlight the matched text
+        name.innerHTML = name.textContent.replace(
+          new RegExp(
+            `(${
+              // Escape regex reserved characters
+              query.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&')
+            })`,
+            'gi'
+          ),
+          '<mark>$1</mark>'
+        );
+      } else {
+        app.dataset.match = 'unknown';
+        app.dataset.focus = 'false';
+        // Remove HTML tags (e.g. <mark>)
+        name.textContent = name.textContent;
+      }
+    });
+
+    // Add focus to the first matched item and remove focus from others
+    let done;
+
+    for (const app of apps) {
+      if (
+        app.dataset.match !== 'none' &&
+        app.dataset.match !== 'unknown' &&
+        !done
+      ) {
+        app.dataset.focus = 'true';
+        done = true;
+      } else {
+        app.dataset.focus = 'false';
+      }
+    }
   });
 }
 
@@ -91,3 +299,4 @@ setInterval(() => {
 
 fetchSystemInfo();
 checkStatus();
+addSearch();
