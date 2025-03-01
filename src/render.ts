@@ -36,14 +36,15 @@ export function render({ apps, dashdot, wallpaper }: Config) {
               class="search"
               placeholder="Search for apps…"
             />
-            <section class="app-grid">
+            <section id="app-grid" class="app-grid">
               ${apps.length === 0
                 ? '<p>No apps configured. Edit <code>config/config.yml</code> to add the list of apps to display.</p>'
                 : apps
                     .map(
-                      (app) => html`
+                      (app, i) => html`
                         <a
                           data-name="${app.name}"
+                          data-index="${i}"
                           href="${app.url.external}"
                           target="_blank"
                           rel="noopener noreferrer"

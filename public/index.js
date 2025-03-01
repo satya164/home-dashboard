@@ -86,7 +86,7 @@ async function checkStatus() {
 
 function addSearch() {
   const search = document.getElementById('search');
-  const apps = document.querySelectorAll('.app-tile');
+  const grid = document.getElementById('app-grid');
 
   document.addEventListener('keydown', (event) => {
     if (event.key.length === 1) {
@@ -108,9 +108,9 @@ function addSearch() {
             // Prevent the default behavior of moving the cursor
             event.preventDefault();
 
-            const results = Array.from(apps).filter(
-              (app) => app.dataset.match !== 'none'
-            );
+            const results = Array.from(
+              grid.querySelectorAll('.app-tile')
+            ).filter((app) => app.dataset.match !== 'none');
 
             if (results.length) {
               const focused = results.find(
@@ -219,7 +219,7 @@ function addSearch() {
           break;
         case 'Enter':
           {
-            const focused = Array.from(apps).find(
+            const focused = Array.from(grid.querySelectorAll('.app-tile')).find(
               (app) =>
                 app.dataset.focus === 'true' || app === document.activeElement
             );
@@ -237,12 +237,13 @@ function addSearch() {
 
   search.addEventListener('input', (event) => {
     const query = event.target.value.toLowerCase();
+    const apps = grid.querySelectorAll('.app-tile');
 
     apps.forEach((app) => {
       const name = app.querySelector('.app-name');
 
       if (query) {
-        const title = name.textContent.toLowerCase();
+        const title = app.dataset.name.toLowerCase();
 
         if (title === query) {
           app.dataset.match = 'exact';
@@ -252,7 +253,6 @@ function addSearch() {
           app.dataset.match = 'partial';
         } else {
           app.dataset.match = 'none';
-          app.dataset.focus = 'false';
         }
 
         // Highlight the matched text
@@ -268,16 +268,39 @@ function addSearch() {
         );
       } else {
         app.dataset.match = 'unknown';
-        app.dataset.focus = 'false';
         // Remove HTML tags (e.g. <mark>)
         name.textContent = name.textContent;
       }
     });
 
-    // Add focus to the first matched item and remove focus from others
+    // Sort the items based on the match if there is a query
+    // Otherwise, sort based on the original index
+    const sorted = Array.from(apps).sort((a, b) => {
+      const aIndex = Number(a.dataset.index);
+      const bIndex = Number(b.dataset.index);
+
+      const weights = {
+        exact: 3,
+        start: 2,
+        partial: 1,
+        none: 0,
+        unknown: -1,
+      };
+
+      if (a.dataset.match === b.dataset.match) {
+        return aIndex - bIndex;
+      }
+
+      return weights[b.dataset.match] - weights[a.dataset.match];
+    });
+
+    // Update the grid with the sorted items
+    // And add move the focus to the first matched item
+    const elements = document.createDocumentFragment();
+
     let done;
 
-    for (const app of apps) {
+    sorted.forEach((app) => {
       if (
         app.dataset.match !== 'none' &&
         app.dataset.match !== 'unknown' &&
@@ -288,7 +311,12 @@ function addSearch() {
       } else {
         app.dataset.focus = 'false';
       }
-    }
+
+      elements.appendChild(app);
+    });
+
+    grid.innerHTML = '';
+    grid.appendChild(elements);
   });
 }
 

@@ -161,24 +161,7 @@ main {
   background-color: rgba(255, 255, 255, 0.25);
 }
 
-.app-tile[data-match='exact'] {
-  order: 0;
-}
-
-.app-tile[data-match='start'] {
-  order: 1;
-}
-
-.app-tile[data-match='partial'] {
-  order: 2;
-}
-
-.app-tile[data-match='unknown'] {
-  order: 3;
-}
-
 .app-tile[data-match='none'] {
-  order: 4;
   visibility: hidden;
 }
 
