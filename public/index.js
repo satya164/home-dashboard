@@ -122,7 +122,7 @@ function addSearch() {
 
             const results = Array.from(
               grid.querySelectorAll(
-                '.app-tile:not([data-match="none"]):not([data-match="unknown"])'
+                '.app-tile:not([data-match="none"])'
               )
             );
 
