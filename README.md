@@ -1,10 +1,12 @@
 # Dashboard
 
-A simple dashboard for homelab with [dashdot](https://getdashdot.com/) integration.
+A dashboard for homelab with [dashdot](https://getdashdot.com/) integration to show the server stats.
 
-![Demo](demo.png)
+![Dashboard](demo.png)
 
-Wallpaper by [Unsplash](https://unsplash.com/photos/black-mountain-under-clear-night-sky-zhUzdTgtRP8).
+![Search](demo-search.png)
+
+Wallpaper by [Unsplash](https://unsplash.com/photos/the-night-sky-is-filled-with-stars-above-the-ocean--Qi1aO87fP4).
 
 ## Installation
 
@@ -26,6 +28,8 @@ services:
       - /DATA/AppData/dashboard/wallpapers:/app/public/wallpapers
     restart: unless-stopped
 ```
+
+Make sure to replace `/DATA/AppData/dashboard` with the path to the directory where the configuration and assets are stored.
 
 ## Configuration
 
