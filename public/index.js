@@ -100,6 +100,18 @@ function addSearch() {
             search.dispatchEvent(new Event('input'), { bubbles: true });
           }
           break;
+        case 'Tab':
+          {
+            // Remove any focus styling and let the browser handle the focus
+            const focused = grid.querySelector('.app-tile[data-focus="true"]');
+
+            if (focused) {
+              focused.dataset.focus = 'false';
+              // Move the focus to highlighted element so browser can start from there
+              focused.focus();
+            }
+          }
+          break;
         case 'ArrowLeft':
         case 'ArrowRight':
         case 'ArrowUp':
@@ -109,8 +121,10 @@ function addSearch() {
             event.preventDefault();
 
             const results = Array.from(
-              grid.querySelectorAll('.app-tile')
-            ).filter((app) => app.dataset.match !== 'none');
+              grid.querySelectorAll(
+                '.app-tile:not([data-match="none"]):not([data-match="unknown"])'
+              )
+            );
 
             if (results.length) {
               const focused = results.find(
@@ -210,7 +224,7 @@ function addSearch() {
                     !document.activeElement ||
                     focused === document.activeElement
                   ) {
-                    next.focus();
+                    item.focus();
                   }
                 }
               }
@@ -271,6 +285,8 @@ function addSearch() {
         // Remove HTML tags (e.g. <mark>)
         name.textContent = name.textContent;
       }
+
+      app.dataset.focus = 'false';
     });
 
     // Sort the items based on the match if there is a query
@@ -295,28 +311,23 @@ function addSearch() {
     });
 
     // Update the grid with the sorted items
-    // And add move the focus to the first matched item
     const elements = document.createDocumentFragment();
 
-    let done;
-
     sorted.forEach((app) => {
-      if (
-        app.dataset.match !== 'none' &&
-        app.dataset.match !== 'unknown' &&
-        !done
-      ) {
-        app.dataset.focus = 'true';
-        done = true;
-      } else {
-        app.dataset.focus = 'false';
-      }
-
       elements.appendChild(app);
     });
 
     grid.innerHTML = '';
     grid.appendChild(elements);
+
+    // Move the focus to the first matched item
+    const first = grid.querySelector(
+      '.app-tile:not([data-match="none"]):not([data-match="unknown"])'
+    );
+
+    if (first) {
+      first.dataset.focus = 'true';
+    }
   });
 }
 
