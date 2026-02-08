@@ -129,7 +129,10 @@ async function asset(
     const stat = await fs.promises.stat(file);
 
     res.setHeader('Last-Modified', stat.mtime.toUTCString());
-    res.setHeader('Expires', new Date(Date.now() + 60 * 1000).toUTCString());
+    res.setHeader(
+      'Cache-Control',
+      'public, max-age=3600, stale-while-revalidate=86400'
+    );
 
     if (req.headers['if-modified-since']) {
       if (req.headers['if-modified-since'] === stat.mtime.toUTCString()) {

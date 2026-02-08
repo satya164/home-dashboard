@@ -5,7 +5,12 @@ import type { App } from './types.ts';
 const html = String.raw;
 
 export function render(config: z.infer<typeof schema>, apps: App[]) {
-  const { wallpaper } = config;
+  const wallpaper = config.wallpaper
+    ? 'url' in config.wallpaper
+      ? config.wallpaper.url
+      : `/wallpapers/${config.wallpaper.file}`
+    : null;
+
   return html`
     <!DOCTYPE html>
     <html lang="en">
@@ -16,6 +21,9 @@ export function render(config: z.infer<typeof schema>, apps: App[]) {
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
         />
         <title>Dashboard</title>
+        ${wallpaper
+          ? `<link rel="preload" as="image" href="${wallpaper}" />`
+          : ''}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
@@ -26,11 +34,7 @@ export function render(config: z.infer<typeof schema>, apps: App[]) {
       </head>
       <body
         ${wallpaper
-          ? `class="wallpaper" style="--wallpaper: url(${
-              'url' in wallpaper
-                ? wallpaper.url
-                : `/wallpapers/${wallpaper.file}`
-            })"`
+          ? `class="wallpaper" style="--wallpaper: url(${wallpaper})"`
           : ''}
       >
         <main>
