@@ -87,6 +87,32 @@ function getHostRamUsage() {
   }
 }
 
+// Filesystem types that are virtual/pseudo and should not be reported as disks
+const VIRTUAL_FS_TYPES = new Set([
+  'autofs',
+  'binfmt_misc',
+  'cgroup',
+  'cgroup2',
+  'configfs',
+  'debugfs',
+  'devpts',
+  'devtmpfs',
+  'efivarfs',
+  'fusectl',
+  'hugetlbfs',
+  'mqueue',
+  'nsfs',
+  'overlay',
+  'proc',
+  'pstore',
+  'rpc_pipefs',
+  'securityfs',
+  'squashfs',
+  'sysfs',
+  'tmpfs',
+  'tracefs',
+]);
+
 async function getDiskUsage() {
   const mounts = useHostRootfs
     ? getHostMountPoints()
@@ -125,21 +151,43 @@ async function getDiskUsage() {
   return result.length ? result : null;
 }
 
+function parseMountPoints(content: string) {
+  const byDevice = new Map<string, string>();
+
+  for (const line of content.split('\n')) {
+    const [device, mount, fstype] = line.split(' ');
+
+    if (!device || !mount || !fstype) {
+      continue;
+    }
+
+    if (VIRTUAL_FS_TYPES.has(fstype)) {
+      continue;
+    }
+
+    if (
+      mount.startsWith('/boot') ||
+      mount.startsWith('/snap')
+    ) {
+      continue;
+    }
+
+    // Keep the shortest mount path per device to dedup bind mounts
+    const existing = byDevice.get(device);
+
+    if (!existing || mount.length < existing.length) {
+      byDevice.set(device, mount);
+    }
+  }
+
+  return [...byDevice.values()];
+}
+
 function getHostMountPoints() {
   try {
-    const mounts = fs.readFileSync(`${HOST_PROC}/mounts`, 'utf-8');
+    const content = fs.readFileSync(`${HOST_PROC}/mounts`, 'utf-8');
 
-    return mounts
-      .split('\n')
-      .map((line) => line.split(' '))
-      .filter(
-        (parts) =>
-          parts.length >= 2 &&
-          parts[0].startsWith('/dev/') &&
-          !parts[1].startsWith('/boot') &&
-          !parts[1].startsWith('/snap')
-      )
-      .map((parts) => `${HOST_ROOTFS}${parts[1]}`);
+    return parseMountPoints(content).map((m) => `${HOST_ROOTFS}${m}`);
   } catch {
     return [];
   }
@@ -147,19 +195,9 @@ function getHostMountPoints() {
 
 function getLocalMountPoints() {
   try {
-    const mounts = fs.readFileSync('/proc/mounts', 'utf-8');
+    const content = fs.readFileSync('/proc/mounts', 'utf-8');
 
-    return mounts
-      .split('\n')
-      .map((line) => line.split(' '))
-      .filter(
-        (parts) =>
-          parts.length >= 2 &&
-          parts[0].startsWith('/dev/') &&
-          !parts[1].startsWith('/boot') &&
-          !parts[1].startsWith('/snap')
-      )
-      .map((parts) => parts[1]);
+    return parseMountPoints(content);
   } catch {
     // No /proc/mounts (e.g. macOS) — fall back to root
     return ['/'];
