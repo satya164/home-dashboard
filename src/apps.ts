@@ -110,7 +110,7 @@ export async function discoverApps(config: Config): Promise<App[]> {
 
   return [
     ...containerApps.filter((app) =>
-      customApps.some((c) => c?.container === app?.container)
+      customApps.some((c) => c.container !== app.container)
     ),
     ...customApps.map((app) => {
       if (app.container) {
