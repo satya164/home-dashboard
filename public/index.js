@@ -29,7 +29,7 @@ async function fetchSystemInfo() {
 
   if (system.storage) {
     system.storage.forEach((it) => {
-      const label = it.mount === '/' ? 'Disk' : `Disk (${it.mount})`;
+      const label = `Disk (${it.mount})`;
       const value = `${it.used.toFixed(2)} GB / ${it.total.toFixed(2)} GB`;
       const status =
         it.used >= it.total * 0.9
