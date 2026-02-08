@@ -1,6 +1,6 @@
 # Dashboard
 
-A dashboard for homelab with [dashdot](https://getdashdot.com/) integration to show the server stats.
+A dashboard for homelab with auto-discovery of [Docker](https://www.docker.com/) containers and [Traefik](https://traefik.io/) domains.
 
 ![Dashboard](demo.png)
 
@@ -23,83 +23,101 @@ services:
     ports:
       - 3096:3096
     volumes:
-      - /DATA/AppData/dashboard/config:/app/config
-      - /DATA/AppData/dashboard/icons:/app/public/icons
-      - /DATA/AppData/dashboard/wallpapers:/app/public/wallpapers
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /:/host/rootfs:ro
+      - ./config:/app/config
+      - ./public/icons:/app/public/icons
+      - ./public/wallpapers:/app/public/wallpapers
     restart: unless-stopped
 ```
 
-Make sure to replace `/DATA/AppData/dashboard` with the path to the directory where the configuration and assets are stored.
+Make sure to replace `./config`, `./public/icons`, and `./public/wallpapers` with the path to the directories where the configuration and assets are stored.
+
+The following volume mounts are needed for full functionality:
+
+- `/var/run/docker.sock` — to discover running containers and their status
+- `/proc` → `/host/proc` — host CPU and RAM metrics
+- `/` → `/host/rootfs` — host disk usage
 
 ## Configuration
 
-The app can be configured using a `config.yml` file in the `config` directory.
+Configuration is done by placing a `config.yml` file in the `config` directory.
 
-The configuration file supports the following options:
+Docker containers are discovered and displayed automatically. Additionally, Traefik API URL is necessary to URLs for containers with published domains:
 
-- `apps`: The list of apps to show on the dashboard
-  - `name`: The name of the app
-  - `icon`: The icon file for the app in the `public/icons` directory
-  - `url`: URLs for the app
-    - `internal`: The internal URL to check if the app is running
-    - `external`: The external URL to open the app on click
-  - `request`: The request options to check the app status (optional)
-    - `method`: The HTTP method to use (default: `HEAD`)
-    - `status_codes`: The list of status codes to check (default: `[200]`)
-    - `path`: The path to check (default: `/`)
-- `dashdot`: Configuration for dashdot (optional)
-  - `url`: The internal URL of the dashdot server
-- `wallpaper`: Configuration for the wallpaper (optional)
-  - `url`: The wallpaper URL to use
-  - `file`: The wallpaper file in the `public/wallpapers` directory
+```yaml
+traefik:
+  url: http://your-traefik-host:8080
+```
 
-Internal URLs refer to the local network URLs, or any URL that can be accessed by the server.
+In addition to auto-discovery, you can also add custom entries and overrides for specific containers with the `apps` key:
 
-The assets can be placed in the `public` directory:
+```yaml
+apps:
+  - container: home-assistant
+    name: Home Assistant
+    icon: home-assistant.svg
+    url: https://assistant.mydomain.com
+```
 
-- `public/icons`: Icons for the apps
-- `public/wallpapers`: Wallpapers for the dashboard
+The following configuration keys are supported:
 
-If an icon is specified, but not found in the `public/icons` directory, it'll be downloaded from [homarr-labs/dashboard-icons](https://github.com/homarr-labs/dashboard-icons) and saved in the `public/icons` directory.
+- `container`: Docker container name - if specified, keys below will override auto-discovered values for that container.
+- `name`: Friendly label to display
+- `icon`: Icon filename stored under `public/icons`. Missing icons are downloaded from [homarr-labs/dashboard-icons](https://github.com/homarr-labs/dashboard-icons) automatically.
+- `url`: URL to open when the tile is clicked.
+- `request`: Optional configuration for making a custom request to determine the status of the app. If not specified, container status is used.
+  - `method`: HTTP method (default: `GET`)
+  - `status_codes`: Array of status codes that indicate the app is up (defaults to any 2xx code)
 
-The app uses [dashdot](https://getdashdot.com/) to show the CPU, RAM, and disk usage of the server. The `dashdot` configuration is optional.
+The `ignore` key can be used to hide specific containers from the dashboard:
+
+```yaml
+ignore:
+  - vpn-gateway
+  - legacy-service
+```
+
+The `wallpaper` key can be used to set a custom wallpaper for the dashboard:
+
+```yaml
+wallpaper:
+  url: https://example.com/wallpaper.jpg
+```
+
+You can also reference local wallpaper files stored under `public/wallpapers`:
+
+```yaml
+wallpaper:
+  file: night-sky.jpg
+```
 
 Sample `config.yml`:
 
 ```yaml
 apps:
-  - name: HomeAssistant
+  - container: home-assistant
+    name: Home Assistant
     icon: home-assistant.svg
-    url:
-      internal: http://192.168.0.100:8123
-      external: https://assistant.mydomain.com
-  - name: Jellyfin
+    url: https://assistant.mydomain.com
+  - container: jellyfin
+    name: Jellyfin
     icon: jellyfin.svg
-    url:
-      internal: http://192.168.0.100:8096
-      external: https://jellyfin.mydomain.com
-  - name: File Browser
-    icon: filebrowser.svg
-    url:
-      internal: http://192.168.0.100:6080
-      external: https://files.mydomain.com
-    request:
-      method: GET
+    url: https://jellyfin.mydomain.com
   - name: Syncthing
     icon: syncthing.svg
-    url:
-      internal: http://192.168.0.100:8384
-      external: https://syncthing.mydomain.com
-    request:
-      status_codes:
-        - 200
-        - 401
+    url: https://syncthing.mydomain.com
 
-dashdot:
-  url: http://192.168.0.100:3001
+ignore:
+  - vpn-gateway
+  - legacy-service
+
+traefik:
+  url: http://192.168.0.100:8080
 
 wallpaper:
-  url: https://images.unsplash.com/flagged/photo-1551301622-6fa51afe75a9
+  file: night-sky.jpg
 ```
 
 ## Development
@@ -133,11 +151,25 @@ podman build . -t ghcr.io/satya164/home-dashboard:main
 To run the Docker image:
 
 ```bash
-docker run -p 3096:3096 -v ./config:/app/config -v ./public/icons:/app/public/icons -v ./public/wallpapers:/app/public/wallpapers ghcr.io/satya164/home-dashboard:main
+docker run -p 3096:3096 \
+  -v ./config:/app/config \
+  -v ./public/icons:/app/public/icons \
+  -v ./public/wallpapers:/app/public/wallpapers \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  -v /proc:/host/proc:ro \
+  -v /:/host/rootfs:ro \
+  ghcr.io/satya164/home-dashboard:main
 ```
 
 Or with Podman:
 
 ```bash
-podman run -p 3096:3096 -v ./config:/app/config -v ./public/icons:/app/public/icons -v ./public/wallpapers:/app/public/wallpapers ghcr.io/satya164/home-dashboard:main
+podman run -p 3096:3096 \
+  -v ./config:/app/config \
+  -v ./public/icons:/app/public/icons \
+  -v ./public/wallpapers:/app/public/wallpapers \
+  -v /run/podman/podman.sock:/var/run/docker.sock:ro \
+  -v /proc:/host/proc:ro \
+  -v /:/host/rootfs:ro \
+  ghcr.io/satya164/home-dashboard:main
 ```

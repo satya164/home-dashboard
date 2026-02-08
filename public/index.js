@@ -3,11 +3,11 @@ async function fetchSystemInfo() {
 
   const info = [];
 
-  if (system.cpu) {
+  if (typeof system.cpu === 'number') {
     const label = 'CPU';
     const value = `${system.cpu.toFixed(2)}%`;
     const status =
-      system.cpu >= 70 ? 'warning' : system.cpu >= 90 ? 'danger' : null;
+      system.cpu >= 90 ? 'danger' : system.cpu >= 70 ? 'warning' : null;
 
     info.push({ label, value, status });
   }
@@ -18,24 +18,24 @@ async function fetchSystemInfo() {
       2
     )} GB / ${system.ram.total.toFixed(2)} GB`;
     const status =
-      system.ram.used >= system.ram.total * 0.7
-        ? 'warning'
-        : system.ram.used >= system.ram.total * 0.9
-          ? 'danger'
+      system.ram.used >= system.ram.total * 0.9
+        ? 'danger'
+        : system.ram.used >= system.ram.total * 0.7
+          ? 'warning'
           : null;
 
     info.push({ label, value, status });
   }
 
   if (system.storage) {
-    system.storage.forEach((it, index, self) => {
-      const label = self.length > 1 ? `Disk ${index + 1}` : 'Disk';
+    system.storage.forEach((it) => {
+      const label = it.mount === '/' ? 'Disk' : `Disk (${it.mount})`;
       const value = `${it.used.toFixed(2)} GB / ${it.total.toFixed(2)} GB`;
       const status =
-        it.used >= it.total * 0.7
-          ? 'warning'
-          : it.used >= it.total * 0.9
-            ? 'danger'
+        it.used >= it.total * 0.9
+          ? 'danger'
+          : it.used >= it.total * 0.7
+            ? 'warning'
             : null;
 
       info.push({ label, value, status });
@@ -78,9 +78,11 @@ async function checkStatus() {
   const status = await fetch('/api/status').then((res) => res.json());
 
   status.forEach((item) => {
-    const el = document.querySelector(`[data-name="${item.name}"] .app-status`);
+    const el = document.querySelector(`[data-id="${item.id}"] .app-status`);
 
-    el.dataset.status = item.status;
+    if (el) {
+      el.dataset.status = item.state;
+    }
   });
 }
 
@@ -97,7 +99,7 @@ function addSearch() {
           {
             search.blur();
             search.value = '';
-            search.dispatchEvent(new Event('input'), { bubbles: true });
+            search.dispatchEvent(new Event('input', { bubbles: true }));
           }
           break;
         case 'Tab':

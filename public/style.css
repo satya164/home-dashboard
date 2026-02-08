@@ -204,16 +204,25 @@ main {
   border-radius: var(--roundness) 0;
 }
 
-.app-status[data-status='online'] {
+.app-status[data-status='running'] {
   background-color: #65bf9b;
 }
 
-.app-status[data-status='offline'] {
+.app-status[data-status='restarting'],
+.app-status[data-status='paused'] {
+  background-color: #f0c674;
+}
+
+.app-status[data-status='exited'],
+.app-status[data-status='dead'],
+.app-status[data-status='created'],
+.app-status[data-status='removing'] {
   background-color: #da5956;
 }
 
-.app-status[data-status='unknown'] {
-  background-color: #f0c674;
+.app-status[data-status='unknown'],
+.app-status[data-status=''] {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .system-info {

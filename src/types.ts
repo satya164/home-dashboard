@@ -1,19 +1,25 @@
-export type Config = {
-  apps: Array<{
-    name: string;
-    icon: string;
-    url: {
-      internal: string;
-      external: string;
-    };
-    request?: {
-      path?: string;
-      method?: string;
-      status_codes?: number[];
-    };
-  }>;
-  dashdot?: {
-    url: string;
-  };
-  wallpaper?: { url: string } | { file: string };
+export type App = {
+  id: string;
+  container?: string;
+  name: string;
+  icon: string;
+  url: string;
+};
+
+export type AppStatus = {
+  id: string;
+  state: string;
+};
+
+export type SystemInfo = {
+  cpu: number | null;
+  ram: {
+    used: number;
+    total: number;
+  } | null;
+  storage: Array<{
+    mount: string;
+    used: number;
+    total: number;
+  }> | null;
 };

@@ -1,8 +1,11 @@
-import type { Config } from './types';
+import type { z } from 'zod';
+import type { schema } from './config';
+import type { App } from './types';
 
 const html = String.raw;
 
-export function render({ apps, dashdot, wallpaper }: Config) {
+export function render(config: z.infer<typeof schema>, apps: App[]) {
+  const { wallpaper } = config;
   return html`
     <!DOCTYPE html>
     <html lang="en">
@@ -26,7 +29,6 @@ export function render({ apps, dashdot, wallpaper }: Config) {
                 : `/wallpapers/${wallpaper.file}`
             })"`
           : ''}
-        }
       >
         <main>
           <div class="content">
@@ -38,14 +40,15 @@ export function render({ apps, dashdot, wallpaper }: Config) {
             />
             <section id="app-grid" class="app-grid">
               ${apps.length === 0
-                ? '<p>No apps configured. Edit <code>config/config.yml</code> to add the list of apps to display.</p>'
+                ? '<p>No Docker containers discovered. Adjust <code>config/config.yml</code> to control visibility or provide overrides.</p>'
                 : apps
                     .map(
                       (app, i) => html`
                         <a
                           data-name="${app.name}"
+                          data-id="${app.id}"
                           data-index="${i}"
-                          href="${app.url.external}"
+                          href="${app.url}"
                           target="_blank"
                           rel="noopener noreferrer"
                           class="app-tile"
@@ -58,17 +61,9 @@ export function render({ apps, dashdot, wallpaper }: Config) {
                     )
                     .join('')}
             </section>
-            ${dashdot?.url
-              ? html`
-                  <section
-                    data-visible="false"
-                    id="system-info"
-                    class="system-info"
-                  >
-                    &nbsp;
-                  </section>
-                `
-              : ''}
+            <section data-visible="false" id="system-info" class="system-info">
+              &nbsp;
+            </section>
           </div>
         </main>
         <script src="/index.js"></script>
