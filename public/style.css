@@ -38,8 +38,33 @@ img {
 
 /* Tokens */
 :root {
+  /* Layout */
   --roundness: 3px;
   --unit: 8px;
+
+  /* Colors */
+  --color-bg: #29292e;
+  --color-text: #fff;
+  --color-text-muted: rgba(255, 255, 255, 0.5);
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-surface-hover: rgba(255, 255, 255, 0.1);
+  --color-surface-wallpaper: rgba(255, 255, 255, 0.15);
+  --color-surface-wallpaper-hover: rgba(255, 255, 255, 0.25);
+  --color-status-running: #65bf9b;
+  --color-status-warning: #f0c674;
+  --color-status-danger: #da5956;
+  --color-status-unknown: rgba(255, 255, 255, 0.3);
+
+  /* Shadows */
+  --shadow-text: 0 1px 1px rgba(0, 0, 0, 0.3);
+  --shadow-box: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  /* Effects */
+  --transition: 150ms ease-in-out;
+  --blur: blur(33px);
+
+  /* Typography */
+  --font-size-sm: 12px;
 }
 
 /* Styles */
@@ -52,8 +77,8 @@ body {
 }
 
 body {
-  background-color: #29292e;
-  color: #fff;
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
 body.wallpaper {
@@ -83,7 +108,7 @@ main {
 
 .search {
   appearance: none;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--color-surface);
   border: none;
   outline: none;
   color: inherit;
@@ -93,27 +118,27 @@ main {
   border-radius: var(--roundness);
   padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2);
   margin-bottom: calc(var(--unit) * 2);
-  transition: background-color 150ms ease-in-out;
+  transition: background-color var(--transition);
 }
 
 .search:focus {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--color-surface-hover);
 }
 
 .search::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  color: var(--color-text-muted);
+  text-shadow: var(--shadow-text);
 }
 
 .wallpaper .search {
-  background-color: rgba(255, 255, 255, 0.15);
-  -webkit-backdrop-filter: blur(33px); /* Safari */
-  backdrop-filter: blur(33px);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: var(--color-surface-wallpaper);
+  -webkit-backdrop-filter: var(--blur); /* Safari */
+  backdrop-filter: var(--blur);
+  box-shadow: var(--shadow-box);
 }
 
 .wallpaper .search:focus {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: var(--color-surface-wallpaper-hover);
 }
 
 @media (min-width: 560px) {
@@ -140,12 +165,12 @@ main {
   text-transform: uppercase;
   text-align: center;
   text-decoration: none;
-  background-color: rgba(255, 255, 255, 0.05);
-  transition: background-color 150ms ease-in-out;
+  background-color: var(--color-surface);
+  transition: background-color var(--transition);
 }
 
 .app-tile:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--color-surface-hover);
 }
 
 .app-tile:hover .app-icon {
@@ -153,19 +178,19 @@ main {
 }
 
 .app-tile:focus-visible, .app-tile[data-focus='true'] {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline: 2px solid var(--color-text-muted);
   outline-offset: 0;
 }
 
 .wallpaper .app-tile {
-  background-color: rgba(255, 255, 255, 0.15);
-  -webkit-backdrop-filter: blur(33px); /* Safari */
-  backdrop-filter: blur(33px);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: var(--color-surface-wallpaper);
+  -webkit-backdrop-filter: var(--blur); /* Safari */
+  backdrop-filter: var(--blur);
+  box-shadow: var(--shadow-box);
 }
 
 .wallpaper .app-tile:hover {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: var(--color-surface-wallpaper-hover);
 }
 
 .app-tile[data-match='none'] {
@@ -175,15 +200,15 @@ main {
 .app-icon {
   width: 48px;
   transform: scale(1);
-  transition: transform 150ms ease-in-out;
+  transition: transform var(--transition);
 }
 
 .app-name {
   position: absolute;
   bottom: calc(var(--unit) * 2);
-  color: rgba(255, 255, 255, 0.5);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-  font-size: 12px;
+  color: var(--color-text-muted);
+  text-shadow: var(--shadow-text);
+  font-size: var(--font-size-sm);
   font-weight: 400;
   text-align: left;
   text-transform: none;
@@ -193,7 +218,7 @@ main {
 }
 
 .app-name mark {
-  color: rgba(255, 255, 255, 1);
+  color: var(--color-text);
   background-color: transparent;
 }
 
@@ -207,24 +232,24 @@ main {
 }
 
 .app-status[data-status='running'] {
-  background-color: #65bf9b;
+  background-color: var(--color-status-running);
 }
 
 .app-status[data-status='restarting'],
 .app-status[data-status='paused'] {
-  background-color: #f0c674;
+  background-color: var(--color-status-warning);
 }
 
 .app-status[data-status='exited'],
 .app-status[data-status='dead'],
 .app-status[data-status='created'],
 .app-status[data-status='removing'] {
-  background-color: #da5956;
+  background-color: var(--color-status-danger);
 }
 
 .app-status[data-status='unknown'],
 .app-status[data-status=''] {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--color-status-unknown);
 }
 
 .system-info {
@@ -233,9 +258,9 @@ main {
   flex-wrap: wrap;
   margin-top: calc(var(--unit) * 2);
   gap: calc(var(--unit) * 2);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 400;
-  transition: opacity 150ms ease-in-out;
+  transition: opacity var(--transition);
 }
 
 .system-info[data-visible='false'] {
@@ -252,9 +277,9 @@ main {
 }
 
 .system-info .warning {
-  color: #f0c674;
+  color: var(--color-status-warning);
 }
 
 .system-info .danger {
-  color: #da5956;
+  color: var(--color-status-danger);
 }
