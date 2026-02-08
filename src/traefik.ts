@@ -1,7 +1,7 @@
 import type Docker from 'dockerode';
-import { getContainerName } from './docker';
-import type { schema } from './config';
 import type { z } from 'zod';
+import type { schema } from './config.ts';
+import { getContainerName } from './docker.ts';
 
 export type RouteInfo = {
   url: string;

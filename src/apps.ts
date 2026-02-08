@@ -3,11 +3,11 @@ import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { finished } from 'node:stream/promises';
-import { docker, getContainerName } from './docker';
-import { getTraefikRoutes } from './traefik';
-import type { AppStatus, App } from './types';
 import type { z } from 'zod';
-import type { schema } from './config';
+import type { schema } from './config.ts';
+import { docker, getContainerName } from './docker.ts';
+import { getTraefikRoutes } from './traefik.ts';
+import type { App, AppStatus } from './types.ts';
 
 type Config = z.infer<typeof schema>;
 

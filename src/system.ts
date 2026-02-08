@@ -1,7 +1,7 @@
 import fs from 'node:fs';
-import os from 'node:os';
 import { statfs } from 'node:fs/promises';
-import type { SystemInfo } from './types';
+import os from 'node:os';
+import type { SystemInfo } from './types.ts';
 
 const HOST_PROC = '/host/proc';
 const HOST_ROOTFS = '/host/rootfs';

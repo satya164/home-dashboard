@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import { join, normalize, resolve } from 'node:path';
-import { loadConfig } from './config';
-import { discoverApps, getStatuses } from './apps';
-import { getSystemInfo } from './system';
-import { render } from './render';
+import { discoverApps, getStatuses } from './apps.ts';
+import { loadConfig } from './config.ts';
+import { render } from './render.ts';
+import { getSystemInfo } from './system.ts';
 
 const host = '0.0.0.0';
 const port = 3096;

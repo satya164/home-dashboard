@@ -1,6 +1,6 @@
 import type { z } from 'zod';
-import type { schema } from './config';
-import type { App } from './types';
+import type { schema } from './config.ts';
+import type { App } from './types.ts';
 
 const html = String.raw;
 
@@ -11,7 +11,10 @@ export function render(config: z.infer<typeof schema>, apps: App[]) {
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
+        />
         <title>Dashboard</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
