@@ -40,7 +40,7 @@ export function render(config: z.infer<typeof schema>, apps: App[]) {
             />
             <section id="app-grid" class="app-grid">
               ${apps.length === 0
-                ? '<p>No Docker containers discovered. Adjust <code>config/config.yml</code> to control visibility or provide overrides.</p>'
+                ? '<p>No apps or docker containers found.</p>'
                 : apps
                     .map(
                       (app, i) => html`

@@ -22,63 +22,64 @@ export async function discoverApps(config: Config): Promise<App[]> {
   const routeMap = await getTraefikRoutes(config, containers);
 
   // Build apps from Docker containers
-  const containerApps = await Promise.all(
-    containers.map(async (container): Promise<App | null> => {
-      const name = getContainerName(container);
+  const containerApps = (
+    await Promise.all(
+      containers.map(async (container): Promise<App | null> => {
+        const name = getContainerName(container);
 
-      if (!name || config.ignore?.includes(name)) {
-        return null;
-      }
+        if (!name || config.ignore?.includes(name)) {
+          return null;
+        }
 
-      const custom = config.apps?.find((app) => app.container === name);
+        const custom = config.apps?.find((app) => app.container === name);
 
-      const displayName =
-        custom?.name ??
-        name
-          .replace(/[-_]+/g, ' ')
-          .split(' ')
-          .filter(Boolean)
-          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-          .join(' ');
+        const displayName =
+          custom?.name ??
+          name
+            .replace(/[-_]+/g, ' ')
+            .split(' ')
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
 
-      const icon = custom?.icon
-        ? (await downloadIcon(custom.icon), custom.icon)
-        : await resolveIcon(name);
+        const icon = custom?.icon
+          ? (await downloadIcon(custom.icon), custom.icon)
+          : await resolveIcon(name);
 
-      let url = custom?.url;
+        let url = custom?.url;
 
-      if (!url) {
-        const urls = routeMap
-          .get(name)
-          ?.map((route) => route.url)
-          .sort((a, b) => {
-            return (
-              (a.endsWith('.local') ? 1 : 0) - (b.endsWith('.local') ? 1 : 0)
-            );
-          });
+        if (!url) {
+          const urls = routeMap
+            .get(name)
+            ?.map((route) => route.url)
+            .sort((a, b) => {
+              return (
+                (a.endsWith('.local') ? 1 : 0) - (b.endsWith('.local') ? 1 : 0)
+              );
+            });
 
-        url = urls?.[0];
-      }
+          url = urls?.[0];
+        }
 
-      if (!url) {
-        return null;
-      }
+        if (!url) {
+          return null;
+        }
 
-      return {
-        id: name,
-        container: name,
-        name: displayName,
-        icon,
-        url,
-      };
-    })
-  );
+        return {
+          id: name,
+          container: name,
+          name: displayName,
+          icon,
+          url,
+        };
+      })
+    )
+  ).filter((app): app is App => app != null);
 
   // Build apps from config entries without a container
-  const customApps = await Promise.all(
-    (config.apps ?? [])
-      .filter((app) => !app.container)
-      .map(async (app): Promise<App | null> => {
+  const customApps = (
+    await Promise.all(
+      (config.apps ?? []).map(async (app): Promise<App | null> => {
         if (
           app.container &&
           !containers.some((c) => getContainerName(c) === app.container)
@@ -97,17 +98,29 @@ export async function discoverApps(config: Config): Promise<App[]> {
           : DEFAULT_ICON;
 
         return {
-          id: app.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          id:
+            app.container || app.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           name: app.name,
           icon,
           url: app.url,
         };
       })
-  );
+    )
+  ).filter((app): app is App => app != null);
 
-  return [...containerApps, ...customApps]
-    .filter((app): app is App => app != null)
-    .sort((a, b) => a.name.localeCompare(b.name));
+  return [
+    ...containerApps.filter((app) =>
+      customApps.some((c) => c?.container === app?.container)
+    ),
+    ...customApps.map((app) => {
+      if (app.container) {
+        const match = containerApps.find((c) => c.container === app.container);
+        return { ...match, ...app };
+      }
+
+      return app;
+    }),
+  ].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getStatuses(config: Config): Promise<AppStatus[]> {
