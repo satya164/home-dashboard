@@ -101,7 +101,8 @@ main {
 }
 
 .search::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.5);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 .wallpaper .search {
@@ -180,7 +181,8 @@ main {
 .app-name {
   position: absolute;
   bottom: calc(var(--unit) * 2);
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.5);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
   font-size: 12px;
   font-weight: 400;
   text-align: left;
