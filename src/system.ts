@@ -185,7 +185,10 @@ function parseMountPoints(content: string) {
 
 function getHostMountPoints() {
   try {
-    const content = fs.readFileSync(`${HOST_PROC}/mounts`, 'utf-8');
+    // Read PID 1's mounts to get the host's root mount namespace.
+    // /host/proc/mounts resolves to self/mounts which gives the
+    // container's mount namespace, not the host's.
+    const content = fs.readFileSync(`${HOST_PROC}/1/mounts`, 'utf-8');
 
     return parseMountPoints(content).map((m) => `${HOST_ROOTFS}${m}`);
   } catch {
