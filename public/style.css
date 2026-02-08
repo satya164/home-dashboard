@@ -2,7 +2,7 @@
 html {
   box-sizing: border-box;
   font-family: 'Roboto Slab', serif;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 *,
@@ -40,7 +40,7 @@ img {
 :root {
   /* Layout */
   --roundness: 3px;
-  --unit: 8px;
+  --unit: 0.5rem;
 
   /* Colors */
   --color-bg: #29292e;
@@ -64,7 +64,8 @@ img {
   --blur: blur(33px);
 
   /* Typography */
-  --font-size-sm: 12px;
+  --font-size-md: 0.875rem;
+  --font-size-sm: 0.75rem;
 }
 
 /* Styles */
@@ -79,6 +80,7 @@ body {
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
+  font-size: var(--font-size-md);
 }
 
 body.wallpaper {
@@ -90,10 +92,10 @@ body.wallpaper {
 main {
   display: flex;
   margin: auto;
-  max-width: 960px;
+  max-width: 60rem;
 }
 
-@media (min-width: 960px) {
+@media (min-width: 60rem) {
   main {
     min-height: 100%;
     align-items: center;
@@ -198,7 +200,7 @@ main {
 }
 
 .app-icon {
-  width: 48px;
+  width: 3rem;
   transform: scale(1);
   transition: transform var(--transition);
 }
@@ -226,8 +228,8 @@ main {
   position: absolute;
   right: 0;
   bottom: 0;
-  width: 16px;
-  height: 4px;
+  width: 1rem;
+  height: 0.25rem;
   border-radius: var(--roundness) 0;
 }
 
