@@ -25,7 +25,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /proc:/host/proc:ro
-      - /:/host/rootfs:ro,rslave
+      - /:/host/rootfs:ro
       - ./config:/app/config
       - ./public/icons:/app/public/icons
       - ./public/wallpapers:/app/public/wallpapers
@@ -157,7 +157,7 @@ docker run -p 3096:3096 \
   -v ./public/wallpapers:/app/public/wallpapers \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
   -v /proc:/host/proc:ro \
-  -v /:/host/rootfs:ro,rslave \
+  -v /:/host/rootfs:ro \
   ghcr.io/satya164/home-dashboard:main
 ```
 
@@ -170,6 +170,6 @@ podman run -p 3096:3096 \
   -v ./public/wallpapers:/app/public/wallpapers \
   -v /run/podman/podman.sock:/var/run/docker.sock:ro \
   -v /proc:/host/proc:ro \
-  -v /:/host/rootfs:ro,rslave \
+  -v /:/host/rootfs:ro \
   ghcr.io/satya164/home-dashboard:main
 ```
