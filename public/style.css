@@ -43,7 +43,7 @@ img {
   --unit: 0.5rem;
 
   /* Colors */
-  --color-bg: #29292e;
+  --color-bg: #2a2d3d;
   --color-text: #fff;
   --color-text-muted: rgba(255, 255, 255, 0.5);
   --color-surface: rgba(255, 255, 255, 0.05);
