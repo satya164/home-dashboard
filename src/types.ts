@@ -2,7 +2,7 @@ export type App = {
   id: string;
   container?: string;
   name: string;
-  icon: string;
+  icon?: string;
   url: string;
 };
 

@@ -60,7 +60,7 @@ export function render(config: z.infer<typeof schema>, apps: App[]) {
                           rel="noopener noreferrer"
                           class="app-tile"
                         >
-                          <img class="app-icon" src="/icons/${app.icon}" />
+                          <img class="app-icon" src=${app.icon ? `/icons/${app.icon}` : '/box.svg'} />
                           <div class="app-name">${app.name}</div>
                           <span class="app-status"></span>
                         </a>

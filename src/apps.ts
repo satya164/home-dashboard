@@ -11,7 +11,6 @@ import type { App, AppStatus } from './types.ts';
 
 type Config = z.infer<typeof schema>;
 
-const DEFAULT_ICON = 'docker.svg';
 const ICON_SOURCE =
   'https://raw.githubusercontent.com/homarr-labs/dashboard-icons/refs/heads/main';
 const ICON_EXTENSIONS = ['svg', 'webp', 'png'];
@@ -24,7 +23,7 @@ export async function discoverApps(config: Config): Promise<App[]> {
   // Build apps from Docker containers
   const containerApps = (
     await Promise.all(
-      containers.map(async (container): Promise<App | null> => {
+      containers.map(async (container) => {
         const name = getContainerName(container);
 
         if (!name || config.ignore?.includes(name)) {
@@ -41,10 +40,6 @@ export async function discoverApps(config: Config): Promise<App[]> {
             .filter(Boolean)
             .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
             .join(' ');
-
-        const icon = custom?.icon
-          ? (await downloadIcon(custom.icon), custom.icon)
-          : await resolveIcon(getImageName(container), name);
 
         let url = custom?.url;
 
@@ -68,18 +63,19 @@ export async function discoverApps(config: Config): Promise<App[]> {
         return {
           id: name,
           container: name,
+          image: getImageName(container),
+          icon: undefined,
           name: displayName,
-          icon,
           url,
         };
       })
     )
-  ).filter((app): app is App => app != null);
+  ).filter((app) => app != null);
 
   // Build apps from config entries without a container
   const customApps = (
     await Promise.all(
-      (config.apps ?? []).map(async (app): Promise<App | null> => {
+      (config.apps ?? []).map(async (app) => {
         if (
           app.container &&
           !containers.some((c) => getContainerName(c) === app.container)
@@ -89,26 +85,31 @@ export async function discoverApps(config: Config): Promise<App[]> {
           );
         }
 
-        if (!app.name || !app.url) {
+        if (!app.url) {
           return null;
         }
 
-        const icon = app.icon
-          ? (await downloadIcon(app.icon), app.icon)
-          : DEFAULT_ICON;
+        const name = app.name ?? app.container;
+
+        if (name == null) {
+          throw new Error(
+            `App must have either a "name" or "container" specified (got ${JSON.stringify(app)}).`
+          );
+        }
 
         return {
-          id:
-            app.container || app.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          name: app.name,
-          icon,
+          id: app.container || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          image: undefined,
+          container: app.container,
+          icon: app.icon,
+          name,
           url: app.url,
         };
       })
     )
-  ).filter((app): app is App => app != null);
+  ).filter((app) => app != null);
 
-  return [
+  const apps = [
     ...containerApps.filter((app) =>
       customApps.some((c) => c.container !== app.container)
     ),
@@ -121,6 +122,24 @@ export async function discoverApps(config: Config): Promise<App[]> {
       return app;
     }),
   ].sort((a, b) => a.name.localeCompare(b.name));
+
+  return await Promise.all(
+    apps.map(async (app): Promise<App> => {
+      let icon;
+
+      if (app.icon) {
+        await downloadIconFile(app.icon);
+
+        icon = app.icon;
+      } else if (app.image || app.container) {
+        icon = await resolveIcon(
+          ...[app.image, app.container].filter((name) => name != null)
+        );
+      }
+
+      return { ...app, icon };
+    })
+  );
 }
 
 export async function getStatuses(config: Config): Promise<AppStatus[]> {
@@ -209,7 +228,9 @@ async function checkHttp(
   }
 }
 
-async function downloadIcon(filename: string) {
+const attemptedDownloads = new Set<string>();
+
+async function downloadIconFile(filename: string) {
   const file = join(ICON_DIR, filename);
 
   try {
@@ -219,6 +240,11 @@ async function downloadIcon(filename: string) {
     // File doesn't exist, continue to download
   }
 
+  // If download was already attempted and failed, don't try again to avoid repeated failed attempts
+  if (attemptedDownloads.has(filename)) {
+    return false;
+  }
+
   if (!filename.includes('.')) {
     throw new Error(`Filename "${filename}" does not have an extension.`);
   }
@@ -226,6 +252,8 @@ async function downloadIcon(filename: string) {
   const ext = filename.split('.').pop();
 
   try {
+    attemptedDownloads.add(filename);
+
     const response = await fetch(`${ICON_SOURCE}/${ext}/${filename}`);
 
     if (response.ok && response.body) {
@@ -250,8 +278,8 @@ async function downloadIcon(filename: string) {
   return false;
 }
 
-async function resolveIcon(imageName: string, containerName: string) {
-  const candidates = [imageName, containerName].flatMap((name) =>
+async function resolveIcon(...names: string[]) {
+  const candidates = names.flatMap((name) =>
     ICON_EXTENSIONS.map((ext) => `${name}.${ext}`)
   );
 
@@ -265,10 +293,10 @@ async function resolveIcon(imageName: string, containerName: string) {
   }
 
   for (const filename of candidates) {
-    if (await downloadIcon(filename)) {
+    if (await downloadIconFile(filename)) {
       return filename;
     }
   }
 
-  return DEFAULT_ICON;
+  return undefined;
 }
