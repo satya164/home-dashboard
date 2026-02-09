@@ -5,7 +5,7 @@ import { Readable } from 'node:stream';
 import { finished } from 'node:stream/promises';
 import type { z } from 'zod';
 import type { schema } from './config.ts';
-import { docker, getContainerName } from './docker.ts';
+import { docker, getContainerName, getImageName } from './docker.ts';
 import { getTraefikRoutes } from './traefik.ts';
 import type { App, AppStatus } from './types.ts';
 
@@ -44,7 +44,7 @@ export async function discoverApps(config: Config): Promise<App[]> {
 
         const icon = custom?.icon
           ? (await downloadIcon(custom.icon), custom.icon)
-          : await resolveIcon(name);
+          : await resolveIcon(getImageName(container), name);
 
         let url = custom?.url;
 
@@ -250,11 +250,11 @@ async function downloadIcon(filename: string) {
   return false;
 }
 
-async function resolveIcon(name: string) {
-  const key = name.toLowerCase();
-  const candidates = ICON_EXTENSIONS.map((ext) => `${key}.${ext}`);
+async function resolveIcon(imageName: string, containerName: string) {
+  const candidates = [imageName, containerName].flatMap((name) =>
+    ICON_EXTENSIONS.map((ext) => `${name}.${ext}`)
+  );
 
-  // Check if any extension already exists locally
   for (const filename of candidates) {
     try {
       await fs.promises.access(join(ICON_DIR, filename));
@@ -264,9 +264,10 @@ async function resolveIcon(name: string) {
     }
   }
 
-  // Try downloading in priority order
   for (const filename of candidates) {
-    if (await downloadIcon(filename)) return filename;
+    if (await downloadIcon(filename)) {
+      return filename;
+    }
   }
 
   return DEFAULT_ICON;

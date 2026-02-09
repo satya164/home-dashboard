@@ -4,6 +4,11 @@ const DEFAULT_SOCKET = '/var/run/docker.sock';
 
 export const docker = createDockerClient();
 
+export function getImageName(container: Docker.ContainerInfo) {
+  const image = container.Image ?? '';
+  return image.replace(/:.*$/, '').split('/').pop() ?? '';
+}
+
 export function getContainerName(container: Docker.ContainerInfo) {
   const [first] = container.Names ?? [];
 
