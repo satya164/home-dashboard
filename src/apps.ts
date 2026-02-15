@@ -9,6 +9,10 @@ import { docker, getContainerName, getImageName } from './docker.ts';
 import { getTraefikRoutes } from './traefik.ts';
 import type { App, AppStatus } from './types.ts';
 
+type IconUpdate = { id: string; icon: string };
+
+type IconListener = (update: IconUpdate | null) => void;
+
 type Config = z.infer<typeof schema>;
 
 const ICON_SOURCE =
@@ -123,23 +127,27 @@ export async function discoverApps(config: Config): Promise<App[]> {
     }),
   ].sort((a, b) => a.name.localeCompare(b.name));
 
-  return await Promise.all(
+  const resolved = await Promise.all(
     apps.map(async (app): Promise<App> => {
-      let icon;
+      const names = app.icon
+        ? [app.icon]
+        : [app.image, app.container].filter((name) => name != null);
 
-      if (app.icon) {
-        await downloadIconFile(app.icon);
-
-        icon = app.icon;
-      } else if (app.image || app.container) {
-        icon = await resolveIcon(
-          ...[app.image, app.container].filter((name) => name != null)
-        );
-      }
+      const icon = names.length
+        ? await resolveIcon(app.id, ...names)
+        : undefined;
 
       return { ...app, icon };
     })
   );
+
+  Promise.all(pendingDownloads.values()).then(() => {
+    for (const listener of iconListeners) {
+      listener(null);
+    }
+  });
+
+  return resolved;
 }
 
 export async function getStatuses(config: Config): Promise<AppStatus[]> {
@@ -228,9 +236,32 @@ async function checkHttp(
   }
 }
 
+let missedUpdates: IconUpdate[] = [];
+
+const iconListeners = new Set<IconListener>();
+const pendingDownloads = new Map<string, Promise<void>>();
 const attemptedDownloads = new Set<string>();
 
-async function downloadIconFile(filename: string) {
+function downloadIconFile(id: string, ...filenames: string[]) {
+  if (pendingDownloads.has(id)) {
+    return;
+  }
+
+  pendingDownloads.set(
+    id,
+    (async () => {
+      for (const filename of filenames) {
+        if (await fetchIcon(id, filename)) {
+          break;
+        }
+      }
+
+      pendingDownloads.delete(id);
+    })()
+  );
+}
+
+async function fetchIcon(id: string, filename: string) {
   const file = join(ICON_DIR, filename);
 
   try {
@@ -245,14 +276,12 @@ async function downloadIconFile(filename: string) {
     return false;
   }
 
-  if (!filename.includes('.')) {
-    throw new Error(`Filename "${filename}" does not have an extension.`);
-  }
-
   const ext = filename.split('.').pop();
 
   try {
     attemptedDownloads.add(filename);
+
+    await new Promise((resolve) => setTimeout(resolve, 5000)); // slight delay to batch multiple requests for the same icon
 
     const response = await fetch(`${ICON_SOURCE}/${ext}/${filename}`);
 
@@ -264,24 +293,38 @@ async function downloadIconFile(filename: string) {
           fs.createWriteStream(file, { flags: 'wx' })
         )
       );
-
-      return true;
+    } else {
+      return false;
     }
   } catch (error: any) {
-    if (error?.code === 'EEXIST') {
-      return true;
-    }
+    if (error?.code !== 'EEXIST') {
+      console.warn(`Failed to download icon: ${filename}`, error);
 
-    console.warn(`Failed to download icon: ${filename}`, error);
+      return false;
+    }
   }
 
-  return false;
+  const update = { id, icon: filename };
+
+  missedUpdates.push(update);
+
+  for (const listener of iconListeners) {
+    listener(update);
+  }
+
+  return true;
 }
 
-async function resolveIcon(...names: string[]) {
-  const candidates = names.flatMap((name) =>
-    ICON_EXTENSIONS.map((ext) => `${name}.${ext}`)
-  );
+async function resolveIcon(
+  id: string,
+  ...names: string[]
+): Promise<string | undefined> {
+  const candidates = names.flatMap((name) => {
+    const key = name.toLowerCase();
+    return key.includes('.')
+      ? [key]
+      : ICON_EXTENSIONS.map((ext) => `${key}.${ext}`);
+  });
 
   for (const filename of candidates) {
     try {
@@ -292,11 +335,38 @@ async function resolveIcon(...names: string[]) {
     }
   }
 
-  for (const filename of candidates) {
-    if (await downloadIconFile(filename)) {
-      return filename;
-    }
-  }
+  downloadIconFile(id, ...candidates);
 
   return undefined;
+}
+
+export function subscribeIcons(
+  onUpdate: (update: IconUpdate) => void,
+  onDone: () => void
+): () => void {
+  for (const update of missedUpdates) {
+    onUpdate(update);
+  }
+
+  missedUpdates = [];
+
+  if (pendingDownloads.size === 0) {
+    onDone();
+    return () => {};
+  }
+
+  const listener: IconListener = (update) => {
+    if (update) {
+      onUpdate(update);
+    } else {
+      onDone();
+      iconListeners.delete(listener);
+    }
+  };
+
+  iconListeners.add(listener);
+
+  return () => {
+    iconListeners.delete(listener);
+  };
 }

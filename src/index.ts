@@ -1,7 +1,11 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import { join, normalize, resolve } from 'node:path';
-import { discoverApps, getStatuses } from './apps.ts';
+import {
+  discoverApps,
+  getStatuses,
+  subscribeIcons,
+} from './apps.ts';
 import { loadConfig } from './config.ts';
 import { render } from './render.ts';
 import { getSystemInfo } from './system.ts';
@@ -22,7 +26,7 @@ const server = http.createServer(async (req, res) => {
     if (req.url === '/') {
       await index(res);
     } else if (req.url.startsWith('/api/')) {
-      await api(req.url, res);
+      await api(req.url, req, res);
     } else {
       await asset(req.url, req, res);
     }
@@ -53,9 +57,7 @@ async function index(res: http.ServerResponse) {
   res.end();
 }
 
-async function api(pathname: string, res: http.ServerResponse) {
-  const config = await loadConfig();
-
+async function api(pathname: string, req: http.IncomingMessage, res: http.ServerResponse) {
   switch (pathname) {
     case '/api/system-info': {
       const system = await getSystemInfo();
@@ -68,11 +70,34 @@ async function api(pathname: string, res: http.ServerResponse) {
     }
 
     case '/api/status': {
+      const config = await loadConfig();
       const status = await getStatuses(config);
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.write(JSON.stringify(status));
       res.end();
+
+      break;
+    }
+
+    case '/api/icons': {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      });
+
+      const unsubscribe = subscribeIcons(
+        (update) => {
+          res.write(`data: ${JSON.stringify(update)}\n\n`);
+        },
+        () => {
+          res.write('event: done\ndata:\n\n');
+          res.end();
+        }
+      );
+
+      req.on('close', unsubscribe);
 
       break;
     }

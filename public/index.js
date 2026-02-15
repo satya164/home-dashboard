@@ -338,6 +338,24 @@ setInterval(() => {
   checkStatus();
 }, 1000 * 60);
 
+function resolveIcons() {
+  const source = new EventSource('/api/icons');
+
+  source.addEventListener('message', (event) => {
+    const { id, icon } = JSON.parse(event.data);
+    const img = document.querySelector(`[data-id="${id}"] .app-icon`);
+
+    if (img) {
+      img.src = `/icons/${icon}`;
+    }
+  });
+
+  source.addEventListener('done', () => {
+    source.close();
+  });
+}
+
 fetchSystemInfo();
 checkStatus();
 addSearch();
+resolveIcons();
